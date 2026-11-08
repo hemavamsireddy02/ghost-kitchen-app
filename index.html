@@ -1,0 +1,619 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Ghost Kitchen Ordering Platform – Prototype</title>
+<style>
+:root{
+  --navy:#1e2761;--navy2:#2f3c7e;--copper:#b5651d;--cream:#f4efe8;--bg:#f5f6f8;--surface:#fff;
+  --text:#14182b;--muted:#5b6070;--border:#dfe3ea;--good:#2e7d52;--warn:#c9602c;--bad:#b3362b;
+  --b0:#3b6fd4;--b1:#e07a2f;--b2:#2f9e6f;--base:#8ea3c7;
+}
+*,*::before,*::after{box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{margin:0;background:var(--bg);color:var(--text);font-family:system-ui,-apple-system,"Segoe UI",Roboto,Arial,sans-serif;line-height:1.45;-webkit-text-size-adjust:100%}
+button,select,input,textarea{font:inherit;color:inherit}
+a{color:var(--navy2)}
+.top{position:sticky;top:0;z-index:20;background:var(--navy);color:#fff;border-bottom:3px solid var(--copper)}
+.top-in{max-width:1100px;margin:0 auto;padding:10px 16px;display:flex;align-items:center;gap:14px;flex-wrap:wrap}
+.logo{font-weight:800;font-size:1.1rem;letter-spacing:.02em;cursor:pointer;display:flex;align-items:center;gap:8px;margin-right:auto;background:none;border:0;color:#fff;padding:0}
+.logo i{width:36px;height:36px;border-radius:10px;background:var(--copper);display:inline-grid;place-items:center;font-style:normal;overflow:hidden}
+.logo i svg,.badge svg,.tile svg{width:100%;height:100%;display:block}
+.tile{display:inline-block;width:42px;height:42px;border-radius:11px;vertical-align:middle;margin-right:10px}
+.nav{display:flex;gap:4px;background:rgba(255,255,255,.1);padding:3px;border-radius:10px}
+.nav button{background:none;border:0;color:#dfe3f6;padding:7px 14px;border-radius:8px;cursor:pointer;font-weight:600;font-size:.92rem}
+.nav button.on{background:#fff;color:var(--navy)}
+.tools{display:flex;gap:8px}
+.tools button{background:transparent;border:1px solid rgba(255,255,255,.4);color:#fff;padding:6px 12px;border-radius:8px;cursor:pointer;font-size:.85rem}
+.tools button.on{background:#fff;color:var(--navy);border-color:#fff}
+.tools button:hover{background:rgba(255,255,255,.12)}
+.tools button.on:hover{background:#fff}
+.wrap{max-width:1100px;margin:0 auto;padding:22px 16px 60px}
+h1{font-size:1.7rem;margin:0 0 4px;color:var(--navy)}
+h2{font-size:1.15rem;margin:0 0 10px;color:var(--navy)}
+.sub{color:var(--muted);margin:0 0 18px}
+.crumb{font-size:.88rem;margin-bottom:10px}
+.crumb button{background:none;border:0;color:var(--navy2);cursor:pointer;padding:0;font-weight:600}
+.btn{background:var(--navy);color:#fff;border:0;padding:10px 18px;border-radius:9px;cursor:pointer;font-weight:700}
+.btn:hover{background:var(--navy2)}
+.btn.alt{background:var(--copper)}
+.btn.ghost{background:#fff;color:var(--navy);border:1px solid var(--border)}
+.btn.sm{padding:6px 12px;font-size:.85rem;border-radius:7px}
+.btn:disabled{opacity:.45;cursor:not-allowed}
+.card{background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:16px 18px;box-shadow:0 1px 3px rgba(20,24,43,.05)}
+.grid{display:grid;gap:14px}
+.g2{grid-template-columns:repeat(2,minmax(0,1fr))}
+.g3{grid-template-columns:repeat(3,minmax(0,1fr))}
+.g4{grid-template-columns:repeat(4,minmax(0,1fr))}
+.chip{display:inline-block;padding:2px 9px;border-radius:999px;font-size:.75rem;font-weight:700;background:#eef0f6;color:var(--navy)}
+.chip.demo{background:#fff3cd;color:#7a5b00}
+.chip.good{background:#e0f2e8;color:var(--good)}.chip.warn{background:#fdebdf;color:var(--warn)}.chip.bad{background:#fbe3e0;color:var(--bad)}
+.dot{display:inline-block;width:10px;height:10px;border-radius:50%;margin-right:6px;background:var(--bc,var(--navy))}
+/* home */
+.hero{background:linear-gradient(135deg,var(--navy),var(--navy2));color:#fff;border-radius:18px;padding:30px 28px;margin-bottom:18px}
+.hero h1{color:#fff;font-size:2rem}.hero p{margin:6px 0 0;color:#d7dcf5;max-width:640px}
+.stats{display:flex;gap:22px;flex-wrap:wrap;margin-top:18px}
+.stats div b{display:block;font-size:1.35rem}.stats div span{font-size:.8rem;color:#c3caf0}
+.role{cursor:pointer;transition:transform .12s,box-shadow .12s;text-align:left;display:flex;flex-direction:column;gap:6px}
+.role:hover{transform:translateY(-3px);box-shadow:0 8px 22px rgba(20,24,43,.12)}
+.role .ic{width:56px;height:56px;border-radius:15px;overflow:hidden}.role .ic svg{width:100%;height:100%;display:block}
+.role h2{margin:6px 0 0}.role p{margin:0;color:var(--muted);font-size:.92rem;flex:1}
+.role .go{font-weight:700;color:var(--copper);margin-top:6px}
+.notice{background:var(--cream);border:1px solid #e3d9c8;border-radius:12px;padding:12px 16px;font-size:.9rem;margin-top:18px}
+/* customer */
+.brand{cursor:pointer;border-top:6px solid var(--bc);text-align:left;transition:transform .12s,box-shadow .12s}
+.brand:hover{transform:translateY(-3px);box-shadow:0 8px 22px rgba(20,24,43,.12)}
+.brand .badge{width:60px;height:60px;border-radius:16px;overflow:hidden;background:var(--bc);color:#fff;display:grid;place-items:center;font-weight:800;font-size:1.2rem;margin-bottom:8px}
+.brand h2{margin-bottom:2px}.brand .meta{color:var(--muted);font-size:.88rem;margin:6px 0}
+.menu-layout{display:grid;grid-template-columns:minmax(0,1fr) 320px;gap:18px;align-items:start}
+.cat{margin-bottom:18px}.cat h3{margin:0 0 8px;font-size:.8rem;text-transform:uppercase;letter-spacing:.08em;color:var(--muted)}
+.item{display:flex;align-items:center;gap:12px;background:#fff;border:1px solid var(--border);border-radius:12px;padding:12px 14px;margin-bottom:8px}
+.item .n{flex:1;font-weight:600}.item .p{color:var(--muted);font-variant-numeric:tabular-nums}
+.step{display:flex;align-items:center;gap:8px}
+.step button{width:30px;height:30px;border-radius:50%;border:1px solid var(--border);background:#fff;cursor:pointer;font-weight:800;font-size:1rem;line-height:1}
+.step button.plus{background:var(--bc);border-color:var(--bc);color:#fff}
+.step span{min-width:18px;text-align:center;font-weight:700}
+.cart{position:sticky;top:80px}
+.cart .row{display:flex;justify-content:space-between;gap:8px;padding:6px 0;font-size:.92rem;border-bottom:1px dashed var(--border)}
+.cart .total{font-weight:800;font-size:1.05rem;border:0;padding-top:10px}
+.empty{color:var(--muted);font-size:.92rem;padding:10px 0}
+label.f{display:block;font-size:.82rem;font-weight:700;color:var(--muted);margin:10px 0 4px;text-transform:uppercase;letter-spacing:.04em}
+input[type=text],textarea,select{width:100%;padding:9px 11px;border:1px solid var(--border);border-radius:8px;background:#fff}
+.pay{display:flex;gap:10px;align-items:center;border:2px solid var(--navy);border-radius:10px;padding:10px 12px;background:#f2f3f9;font-size:.92rem}
+.track{display:flex;align-items:center;margin:18px 0 8px}
+.track .s{flex:1;text-align:center;position:relative;font-size:.85rem;font-weight:600;color:var(--muted)}
+.track .s b{display:grid;place-items:center;width:34px;height:34px;border-radius:50%;margin:0 auto 6px;background:#e6e8f0;color:var(--muted);position:relative;z-index:1}
+.track .s.done b{background:var(--good);color:#fff}.track .s.cur b{background:var(--copper);color:#fff;box-shadow:0 0 0 5px rgba(181,101,29,.2)}
+.track .s.done,.track .s.cur{color:var(--text)}
+.track .s::before{content:"";position:absolute;top:16px;left:-50%;width:100%;height:3px;background:#e6e8f0}
+.track .s:first-child::before{display:none}
+.track .s.done::before,.track .s.cur::before{background:var(--good)}
+/* kitchen */
+.kbar{display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin-bottom:14px}
+.kbar .sp{flex:1}
+.fchip{border:1px solid var(--border);background:#fff;padding:5px 12px;border-radius:999px;cursor:pointer;font-size:.85rem;font-weight:600}
+.fchip.on{background:var(--navy);color:#fff;border-color:var(--navy)}
+.kstats{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:14px}
+.kstats div{background:#fff;border:1px solid var(--border);border-radius:12px;padding:10px 14px}
+.kstats b{font-size:1.4rem;display:block}.kstats span{font-size:.8rem;color:var(--muted)}
+.cols{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:14px;align-items:start}
+.col{background:#eceef4;border-radius:14px;padding:10px;min-height:140px}
+.col h3{margin:2px 4px 10px;font-size:.85rem;text-transform:uppercase;letter-spacing:.06em;color:var(--navy);display:flex;justify-content:space-between}
+.oc{background:#fff;border:1px solid var(--border);border-left:5px solid var(--bc);border-radius:10px;padding:10px 12px;margin-bottom:10px;font-size:.9rem}
+.oc-h{display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-bottom:6px}
+.oc ul{margin:4px 0 8px;padding-left:18px}
+.oc .meta{color:var(--muted);font-size:.82rem;margin-bottom:8px}
+.oc .acts{display:flex;gap:6px;flex-wrap:wrap;align-items:center}
+.oc .issue{display:flex;gap:6px;margin-top:8px;padding-top:8px;border-top:1px dashed var(--border)}
+.oc .issue select{padding:5px 8px;font-size:.82rem}
+/* owner */
+.tabs{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:14px}
+.tab{border:1px solid var(--border);background:#fff;padding:8px 16px;border-radius:10px;cursor:pointer;font-weight:700;font-size:.92rem}
+.tab.on{background:var(--navy);color:#fff;border-color:var(--navy)}
+.kpi{padding:14px 16px}
+.kpi .lab .chip{white-space:nowrap}.kpi .lab{flex-wrap:wrap}.kpi .lab span:first-child{white-space:nowrap}.kpi .lab{display:flex;justify-content:space-between;align-items:center;gap:6px;font-size:.8rem;font-weight:700;text-transform:uppercase;letter-spacing:.05em;color:var(--muted)}
+.kpi .big{font-size:2rem;font-weight:800;color:var(--navy);margin:4px 0 0;font-variant-numeric:tabular-nums}
+.kpi .src{font-size:.76rem;color:var(--muted);margin-bottom:8px}
+.kpi table{width:100%;border-collapse:collapse;font-size:.85rem}
+.kpi td{padding:3px 0;border-top:1px solid #eef0f4}.kpi td:last-child{text-align:right;font-weight:700;font-variant-numeric:tabular-nums}
+.cmp{display:grid;grid-template-columns:110px 1fr;gap:8px;align-items:center;margin:10px 0}
+.cmp-l{font-weight:700;font-size:.88rem}
+.cmp-b{position:relative}
+.bar{height:15px;background:#eef0f6;border-radius:4px;margin:3px 0;position:relative;overflow:hidden}
+.bar i{display:block;height:100%;border-radius:4px}
+.bar em{position:absolute;right:6px;top:-1px;font-style:normal;font-size:.72rem;font-weight:700;line-height:15px}
+.tick{position:absolute;top:-2px;bottom:-2px;width:0;border-left:2px dashed var(--bad)}
+.legend{font-size:.78rem;color:var(--muted);display:flex;gap:14px;flex-wrap:wrap;margin-top:6px}
+.legend span::before{content:"";display:inline-block;width:10px;height:10px;border-radius:2px;margin-right:5px;background:var(--c)}
+.cols2{display:flex;align-items:flex-end;gap:5px;height:150px;border-bottom:1px solid var(--border);padding-top:16px}
+.cols2 .c{flex:1;display:flex;flex-direction:column;justify-content:flex-end;align-items:center;height:100%;font-size:.7rem;font-weight:700}
+.cols2 .c i{display:block;width:100%;border-radius:4px 4px 0 0;min-height:1px}
+.hl{display:flex;gap:5px;margin-top:4px}.hl span{flex:1;text-align:center;font-size:.74rem;color:var(--muted)}
+.feed .r{display:flex;gap:10px;align-items:center;padding:7px 0;border-bottom:1px solid #eef0f4;font-size:.88rem}
+.feed .r:last-child{border:0}
+.feed .r .id{font-weight:700;min-width:78px}.feed .r .rt{margin-left:auto;text-align:right;color:var(--muted)}
+.alert{border-left:4px solid var(--warn);background:#fff7f1;padding:9px 12px;border-radius:8px;margin-bottom:8px;font-size:.9rem}
+.alert.info{border-color:var(--navy2);background:#f2f3f9}.alert.ok{border-color:var(--good);background:#eef8f2}
+table.t{width:100%;border-collapse:collapse;font-size:.85rem}
+table.t th{text-align:left;color:var(--muted);font-size:.75rem;text-transform:uppercase;letter-spacing:.05em;padding:6px 8px;border-bottom:2px solid var(--border)}
+table.t td{padding:6px 8px;border-bottom:1px solid #eef0f4}
+table.t td.r,table.t th.r{text-align:right;font-variant-numeric:tabular-nums}
+pre.code{background:#101530;color:#cfe3ff;border-radius:10px;padding:12px 14px;font-size:.78rem;overflow:auto;max-height:230px;margin:8px 0 0}
+.flow{display:flex;gap:6px;align-items:stretch;flex-wrap:wrap;margin:6px 0 10px}
+.flow div{flex:1;min-width:130px;background:#f2f3f9;border:1px solid var(--border);border-radius:10px;padding:8px 10px;font-size:.82rem}
+.flow div b{display:block;color:var(--navy)}
+.flow .arr{flex:0 0 auto;min-width:0;background:none;border:0;display:grid;place-items:center;color:var(--copper);font-weight:800;padding:0}
+details summary{cursor:pointer;font-weight:700;color:var(--navy);padding:4px 0}
+/* modal */
+.modal{position:fixed;inset:0;background:rgba(10,14,40,.55);z-index:50;display:none;align-items:center;justify-content:center;padding:16px}
+.modal.on{display:flex}
+.mbox{background:#fff;border-radius:16px;max-width:560px;width:100%;padding:24px;box-shadow:0 20px 60px rgba(0,0,0,.35)}
+.mbox h2{font-size:1.3rem}.mbox .stepn{font-size:.78rem;font-weight:700;color:var(--copper);text-transform:uppercase;letter-spacing:.08em}
+.mbox .body{margin:10px 0 16px;color:#2a2f45}.mbox .body ul{padding-left:20px;margin:8px 0}
+.mbox .foot{display:flex;gap:8px;align-items:center}.mbox .foot .sp{flex:1}
+.dots{display:flex;gap:5px}.dots i{width:8px;height:8px;border-radius:50%;background:#d4d8e6}.dots i.on{background:var(--copper)}
+.toast{position:fixed;left:50%;bottom:22px;transform:translateX(-50%);background:var(--navy);color:#fff;padding:10px 18px;border-radius:10px;font-size:.9rem;z-index:60;opacity:0;pointer-events:none;transition:opacity .2s}
+.toast.on{opacity:1}
+.foot-note{margin-top:28px;font-size:.8rem;color:var(--muted);text-align:center}
+
+.g5{grid-template-columns:repeat(5,minmax(0,1fr))}
+.kpi td{font-size:.8rem}
+.item.off{opacity:.55}.item.off .n{text-decoration:line-through}
+.wi{display:grid;grid-template-columns:260px minmax(0,1fr);gap:18px}.wi-items{max-height:320px;overflow:auto;padding-right:4px}
+.pin{width:92px;text-align:right;padding:5px 8px;border:1px solid var(--border);border-radius:7px}
+.sw{display:inline-flex;gap:6px;align-items:center;cursor:pointer;font-size:.82rem}.sw input{width:auto}
+table.t tr.off td{color:var(--muted)}
+.hfilters{display:grid;grid-template-columns:minmax(0,1.6fr) repeat(3,minmax(0,1fr));gap:8px}
+.tgt{margin:-4px 0 14px}.tgt summary{font-size:.85rem}.tgt-in{display:flex;gap:14px;align-items:flex-end;flex-wrap:wrap;margin-top:8px;background:#fff;border:1px solid var(--border);border-radius:12px;padding:12px 14px}
+.tgt-in label{font-size:.78rem;font-weight:700;color:var(--muted);display:flex;flex-direction:column;gap:4px}.tgt-in input{width:120px;padding:7px 9px;border:1px solid var(--border);border-radius:8px}
+.rate{text-align:center;margin:0 0 16px;padding:12px;background:#fbf7ef;border:1px solid #eadfc9;border-radius:12px}.rate p{margin:0 0 6px}
+.stars{display:flex;flex-direction:row-reverse;justify-content:center;gap:2px}
+.stars button{background:none;border:0;font-size:2.1rem;line-height:1;color:#cfd3e0;cursor:pointer;padding:0 3px}
+.stars button:hover,.stars button:hover~button{color:#f2a900}
+@media (max-width:1000px){.g5{grid-template-columns:repeat(2,minmax(0,1fr))}.hfilters{grid-template-columns:1fr 1fr}}
+@media (max-width:860px){.wi{grid-template-columns:1fr}
+  .g3,.g4{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .menu-layout{grid-template-columns:1fr}.cart{position:static}
+  .cols{grid-template-columns:1fr}.kstats{grid-template-columns:repeat(2,1fr)}
+}
+@media (max-width:560px){
+  .g2,.g3,.g4,.g5,.hfilters{grid-template-columns:1fr}.top-in{gap:8px}.nav button{padding:7px 10px}
+  .hero{padding:22px 18px}.hero h1{font-size:1.5rem}.cmp{grid-template-columns:90px 1fr}
+}
+.cartbar{display:none;position:fixed;left:12px;right:12px;bottom:14px;z-index:30;background:var(--copper);color:#fff;border:0;border-radius:12px;padding:14px 18px;font-size:1rem;cursor:pointer;justify-content:space-between;box-shadow:0 8px 24px rgba(0,0,0,.25)}
+.bar em{background:rgba(255,255,255,.82);padding:0 5px;border-radius:3px;top:0;right:3px}
+@media (max-width:860px){.cartbar{display:flex}.wrap{padding-bottom:90px}}
+</style>
+</head>
+<body>
+<header class="top"><div class="top-in">
+  <button class="logo" data-act="go" data-to="home"><i></i>Ghost Kitchen</button>
+  <nav class="nav" id="nav">
+    <button data-role="customer" data-act="go" data-to="customer">Customer</button>
+    <button data-role="kitchen" data-act="go" data-to="kitchen">Kitchen</button>
+    <button data-role="owner" data-act="go" data-to="owner">Owner</button>
+  </nav>
+  <div class="tools"><button data-act="go" data-to="about" id="aboutBtn">About us</button><button data-act="tour">Take the tour</button><button data-act="reset">Reset demo</button></div>
+</div></header>
+<main class="wrap" id="app"></main>
+<div class="modal" id="modal"></div>
+<div class="toast" id="toast"></div>
+
+<script>
+const DATA = {"brands": ["Super Galactic", "Wing Theory", "Bowl Barn"], "cuisine": {"Super Galactic": "Burgers", "Wing Theory": "Wings", "Bowl Barn": "Bowls"}, "menu": {"Super Galactic": [{"id": "I-001", "name": "Galaxy Smash Burger", "cat": "Main", "price": 11.99, "cost": 3.6, "sold": 675}, {"id": "I-002", "name": "Double Nova Burger", "cat": "Main", "price": 14.99, "cost": 4.8, "sold": 429}, {"id": "I-003", "name": "Cosmic Chicken Sandwich", "cat": "Main", "price": 12.49, "cost": 3.9, "sold": 353}, {"id": "I-004", "name": "Meteor Fries", "cat": "Side", "price": 4.99, "cost": 1.1, "sold": 670}, {"id": "I-005", "name": "Onion Rings", "cat": "Side", "price": 5.49, "cost": 1.75, "sold": 74}, {"id": "I-006", "name": "Milky Way Shake", "cat": "Drink", "price": 6.49, "cost": 1.9, "sold": 229}, {"id": "I-007", "name": "Fountain Soda", "cat": "Drink", "price": 2.99, "cost": 0.5, "sold": 479}, {"id": "I-008", "name": "Comet Cookie", "cat": "Dessert", "price": 3.99, "cost": 1.2, "sold": 258}], "Wing Theory": [{"id": "I-009", "name": "6-Piece Wings", "cat": "Main", "price": 9.99, "cost": 3.8, "sold": 447}, {"id": "I-010", "name": "12-Piece Wings", "cat": "Main", "price": 17.99, "cost": 7.0, "sold": 330}, {"id": "I-011", "name": "20-Piece Party Pack", "cat": "Main", "price": 28.99, "cost": 11.9, "sold": 79}, {"id": "I-012", "name": "Boneless Basket", "cat": "Main", "price": 12.99, "cost": 4.5, "sold": 324}, {"id": "I-013", "name": "Loaded Fries", "cat": "Side", "price": 7.49, "cost": 2.2, "sold": 420}, {"id": "I-014", "name": "Coleslaw", "cat": "Side", "price": 3.99, "cost": 0.95, "sold": 191}, {"id": "I-015", "name": "Fountain Soda", "cat": "Drink", "price": 2.99, "cost": 0.5, "sold": 581}, {"id": "I-016", "name": "Brownie Bite", "cat": "Dessert", "price": 4.49, "cost": 1.3, "sold": 176}], "Bowl Barn": [{"id": "I-017", "name": "Chicken Teriyaki Bowl", "cat": "Main", "price": 12.99, "cost": 3.6, "sold": 334}, {"id": "I-018", "name": "Beef Burrito Bowl", "cat": "Main", "price": 13.99, "cost": 4.1, "sold": 294}, {"id": "I-019", "name": "Falafel Bowl", "cat": "Main", "price": 11.99, "cost": 2.8, "sold": 62}, {"id": "I-020", "name": "Salmon Poke Bowl", "cat": "Main", "price": 15.49, "cost": 5.9, "sold": 140}, {"id": "I-021", "name": "Side Salad", "cat": "Side", "price": 4.99, "cost": 1.2, "sold": 240}, {"id": "I-022", "name": "Miso Soup", "cat": "Side", "price": 3.49, "cost": 0.7, "sold": 213}, {"id": "I-023", "name": "Iced Tea", "cat": "Drink", "price": 3.49, "cost": 0.5, "sold": 425}, {"id": "I-024", "name": "Mochi Dessert", "cat": "Dessert", "price": 4.49, "cost": 1.5, "sold": 134}]}, "base": {"Overall": {"orders": 2130, "revenue": 65356.43, "profit": 33350.37, "margin": 0.5103, "errorRate": 0.0568, "prepAvg": 14.75, "prepN": 1642, "rating": 4.2, "ratingN": 503, "errTypes": {"Missing Item": 37, "Cold/Late": 32, "Wrong Item": 27, "Wrong Modifier": 25}, "hours": {"11": 180, "12": 260, "13": 194, "14": 98, "15": 38, "16": 61, "17": 164, "18": 274, "19": 258, "20": 197, "21": 176, "22": 156, "23": 74}}, "Super Galactic": {"orders": 871, "revenue": 26630.33, "profit": 13969.68, "margin": 0.5246, "errorRate": 0.0608, "prepAvg": 14.24, "prepN": 684, "rating": 4.15, "ratingN": 210, "errTypes": {"Missing Item": 18, "Cold/Late": 14, "Wrong Modifier": 13, "Wrong Item": 8}, "hours": {"11": 69, "12": 79, "13": 74, "14": 34, "15": 18, "16": 27, "17": 72, "18": 106, "19": 95, "20": 88, "21": 88, "22": 84, "23": 37}}, "Wing Theory": {"orders": 723, "revenue": 23336.52, "profit": 11149.55, "margin": 0.4778, "errorRate": 0.0526, "prepAvg": 17.25, "prepN": 543, "rating": 4.24, "ratingN": 168, "errTypes": {"Missing Item": 11, "Wrong Item": 11, "Wrong Modifier": 9, "Cold/Late": 7}, "hours": {"11": 49, "12": 80, "13": 55, "14": 38, "15": 12, "16": 22, "17": 53, "18": 107, "19": 97, "20": 65, "21": 61, "22": 55, "23": 29}}, "Bowl Barn": {"orders": 536, "revenue": 15389.58, "profit": 8231.14, "margin": 0.5349, "errorRate": 0.056, "prepAvg": 12.32, "prepN": 415, "rating": 4.21, "ratingN": 125, "errTypes": {"Cold/Late": 11, "Missing Item": 8, "Wrong Item": 8, "Wrong Modifier": 3}, "hours": {"11": 62, "12": 101, "13": 65, "14": 26, "15": 8, "16": 12, "17": 39, "18": 61, "19": 66, "20": 44, "21": 27, "22": 17, "23": 8}}}, "channels": {"Notebook (Phone/Text)": 0.0, "Platform A (CSV Export)": 0.25, "Platform B (Dashboard Only)": 0.15}, "period": "Mar 1 \u2013 Apr 11, 2026", "lines": 5790};
+const B = DATA.brands, BC = ['#3b6fd4','#e07a2f','#2f9e6f'];
+const TAG = ['Burgers, fries, shakes','Wings, fries, party packs','Rice bowls, sides, desserts'];
+const ERR = ['Missing Item','Wrong Item','Wrong Modifier','Cold/Late'];
+const TARGET = {margin:0.55, err:0.03};
+const MIN_N = 10, RATE_MIN = 5;
+const SEC_PER_MIN = 5;                      // demo clock: 5 real seconds = 1 minute
+const simMin = ms => ms/1000/SEC_PER_MIN;
+const KEY = 'gk_proto_v1';
+const $ = s => document.querySelector(s);
+const esc = s => String(s).replace(/[&<>"]/g, c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const money = n => '$' + n.toFixed(2), money0 = n => '$' + Math.round(n).toLocaleString('en-US');
+const pct = (n,d=1) => (n*100).toFixed(d) + '%';
+const init = b => B[b].split(' ').map(w=>w[0]).join('');
+
+
+/* ---------- logos (original inline SVG) ---------- */
+const LOGO = {
+  customer: bg=>`<svg viewBox="0 0 48 48" aria-hidden="true"><path d="M12 18h24l2.5 22a3 3 0 0 1-3 3.3H12.5a3 3 0 0 1-3-3.3z" fill="#fff"/><path d="M17 22v-4a7 7 0 0 1 14 0v4" fill="none" stroke="#fff" stroke-width="3" stroke-linecap="round"/><path d="M18 30q6 5 12 0" fill="none" stroke="${bg}" stroke-width="2.6" stroke-linecap="round"/></svg>`,
+  kitchen: bg=>`<svg viewBox="0 0 48 48" aria-hidden="true"><circle cx="15.5" cy="17" r="7" fill="#fff"/><circle cx="24" cy="14" r="8.5" fill="#fff"/><circle cx="32.5" cy="17" r="7" fill="#fff"/><path d="M13 20h22l-2 9H15z" fill="#fff"/><rect x="14" y="30" width="20" height="8" rx="2" fill="#fff"/><path d="M19 24v11M24 24v11M29 24v11" stroke="${bg}" stroke-width="1.8" stroke-linecap="round" opacity=".5"/></svg>`,
+  owner: bg=>`<svg viewBox="0 0 48 48" aria-hidden="true"><rect x="8" y="26" width="8" height="14" rx="2" fill="#fff"/><rect x="20" y="19" width="8" height="21" rx="2" fill="#fff"/><rect x="32" y="12" width="8" height="28" rx="2" fill="#fff"/><path d="M9 17l9-6 7 4 11-9" fill="none" stroke="#fff" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" opacity=".75"/><path d="M30 6h6v6" fill="none" stroke="#fff" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" opacity=".75"/></svg>`,
+  gk: bg=>`<svg viewBox="0 0 48 48" aria-hidden="true"><circle cx="17" cy="10" r="5" fill="#1e2761"/><circle cx="24" cy="8" r="6" fill="#1e2761"/><circle cx="31" cy="10" r="5" fill="#1e2761"/><rect x="13" y="12" width="22" height="7" rx="2" fill="#1e2761"/>
+    <path d="M9 45V29C9 21 15.5 17 24 17s15 4 15 12v16l-5-4-5 4-5-4-5 4-5-4z" fill="#fff"/><circle cx="19" cy="30" r="2.8" fill="#1e2761"/><circle cx="29" cy="30" r="2.8" fill="#1e2761"/><path d="M20.5 36q3.5 3 7 0" fill="none" stroke="#1e2761" stroke-width="1.8" stroke-linecap="round"/></svg>`,
+  0: bg=>`<svg viewBox="0 0 48 48" aria-hidden="true"><g transform="rotate(-24 24 26)"><path d="M3 26A21 6.5 0 0 1 45 26" fill="none" stroke="#fff" stroke-width="2.6" stroke-linecap="round"/></g>
+    <circle cx="24" cy="26" r="12.5" fill="#fff"/><path d="M10 23.2H38M10 28.8H38" stroke="${bg}" stroke-width="2.6"/>
+    <g transform="rotate(-24 24 26)"><path d="M3 26A21 6.5 0 0 0 45 26" fill="none" stroke="#fff" stroke-width="2.6" stroke-linecap="round"/><path d="M3 26A21 6.5 0 0 0 45 26" fill="none" stroke="${bg}" stroke-width="0.01"/></g>
+    <path d="M38 5l1.6 4.2 4.2 1.6-4.2 1.6L38 16.6l-1.6-4.2-4.2-1.6 4.2-1.6z" fill="#fff"/></svg>`,
+  1: bg=>`<svg viewBox="0 0 48 48" aria-hidden="true"><g transform="rotate(-18 24 25)"><path d="M3 25A21 6.5 0 0 1 45 25" fill="none" stroke="#fff" stroke-width="2.2" opacity=".6" stroke-linecap="round"/></g>
+    <g transform="rotate(45 24 24)"><rect x="21.6" y="22" width="4.8" height="19" rx="2" fill="#fff"/><circle cx="22.2" cy="42" r="3.1" fill="#fff"/><circle cx="25.8" cy="42" r="3.1" fill="#fff"/><ellipse cx="24" cy="16" rx="11" ry="12.5" fill="#fff"/><path d="M19 12.5c2-2.4 5.4-3 8-1.6" fill="none" stroke="${bg}" stroke-width="1.8" stroke-linecap="round" opacity=".55"/></g>
+    <g transform="rotate(-18 24 25)"><path d="M3 25A21 6.5 0 0 0 45 25" fill="none" stroke="#fff" stroke-width="2.2" stroke-linecap="round"/></g><circle cx="41.5" cy="14" r="2.6" fill="#fff"/></svg>`,
+  2: bg=>`<svg viewBox="0 0 48 48" aria-hidden="true"><path d="M13 27V17l11-9 11 9v10z" fill="#fff"/><path d="M20 27v-8h8v8M20 19l8 8M28 19l-8 8" fill="none" stroke="${bg}" stroke-width="1.7"/>
+    <path d="M6 29h36c0 9-7 15-18 15S6 38 6 29z" fill="#fff"/><path d="M6 29h36" stroke="${bg}" stroke-width="1.8"/></svg>`
+};
+const logoHTML = (k, bg) => LOGO[k](bg || '#1e2761');
+
+/* ---------- shared store (browser storage = demo database) ---------- */
+let mem = null;
+function load(){ let s=null; try{ const x=localStorage.getItem(KEY); if(x) s=JSON.parse(x); }catch(e){} if(!s) s=mem; s=s||{seq:0,orders:[]}; s.orders=s.orders||[]; s.menuOv=s.menuOv||{}; s.targets=s.targets||{}; return s; }
+function save(S){ mem = S; try{ localStorage.setItem(KEY, JSON.stringify(S)); }catch(e){} }
+function mutate(fn){ const S = load(); fn(S); save(S); render(); }
+let cart = {0:{},1:{},2:{}}, kFilter = -1, ownerTab = 'all', cname = '';
+let wi = {open:false, b:0, items:{}, name:'', channel:'Phone'};
+let hf = {q:'', st:'', iss:'', ch:''};
+let sound = true, prevNew = null;
+const stLabel = {new:'Received', preparing:'Preparing', ready:'Ready', picked:'Picked up'};
+const chan = o => o.source==='demo' ? 'Demo' : o.source==='walkin' ? (o.channel||'Walk-in') : 'App';
+const tp = v => pct(v, Math.abs(v*100-Math.round(v*100))<1e-9 ? 0 : 1);
+const findItem = id => { for(const b of B){ const it = DATA.menu[b].find(x=>x.id===id); if(it) return it; } return null; };
+/* menu with owner overrides (price, availability) applied */
+function effMenu(S,b){ return DATA.menu[B[b]].map(it=>{ const ov=S.menuOv[it.id]||{}; return {...it, basePrice:it.price, price: ov.price!=null?ov.price:it.price, avail: ov.avail!==false}; }); }
+function newOrder(S, o){ S.seq++; const pre = o.source==='walkin' ? 'WLK' : 'APP';
+  const ord = orderCalc({id:pre+'-'+String(S.seq).padStart(4,'0'), name:'Guest', note:'', createdAt:Date.now(), status:'new', startedAt:null, readyAt:null, prepMin:null, error:null, rating:null, ...o}); S.orders.push(ord); return ord; }
+
+/* ---------- business logic: orders -> KPIs ---------- */
+function orderCalc(o){ let rev=0, prof=0; o.items.forEach(i=>{ rev+=i.price*i.qty; prof+=(i.price-i.cost)*i.qty; }); o.revenue=+rev.toFixed(2); o.profit=+prof.toFixed(2); return o; }
+const isDone = o => o.status==='ready' || o.status==='picked';
+function kpis(S, b){
+  const os = S.orders.filter(o=> b==null || o.brand===b);
+  const done = os.filter(isDone);
+  const rev = os.reduce((a,o)=>a+o.revenue,0), prof = os.reduce((a,o)=>a+o.profit,0);
+  const errs = done.filter(o=>o.error), preps = done.filter(o=>o.prepMin!=null);
+  const et = {}; errs.forEach(o=>et[o.error]=(et[o.error]||0)+1);
+  const rated = os.filter(o=>o.rating!=null);
+  return {n:os.length, rev, prof, margin: rev? prof/rev : null, doneN:done.length,
+    ratingN: rated.length, ratingAvg: rated.length? rated.reduce((a,o)=>a+o.rating,0)/rated.length : null,
+    errRate: done.length? errs.length/done.length : null, errN: errs.length,
+    prepAvg: preps.length? preps.reduce((a,o)=>a+o.prepMin,0)/preps.length : null, errTypes:et, aov: os.length? rev/os.length : null};
+}
+function csv(S){
+  const head = ['order_id','order_date','order_time','order_hour','brand_name','order_channel','item_id','item_name','quantity','unit_price_usd','unit_food_cost_usd','platform_commission_pct','order_revenue_usd','order_profit_usd','prep_time_min','order_error','error_type','data_source','customer_rating'];
+  const rows = [head.join(',')];
+  S.orders.forEach(o=>{ const d = new Date(o.createdAt);
+    o.items.forEach(i=> rows.push([o.id, d.toISOString().slice(0,10), d.toTimeString().slice(0,5), d.getHours(), B[o.brand], (o.source==='walkin'?(o.channel||'Walk-in'):'Ghost Kitchen App'), i.id, '"'+i.name+'"', i.qty, i.price, i.cost, 0,
+      (i.price*i.qty).toFixed(2), ((i.price-i.cost)*i.qty).toFixed(2), o.prepMin==null?'':o.prepMin, o.error?'Yes':'No', o.error||'No Error', o.source, o.rating||''].join(','))); });
+  return rows.join('\n');
+}
+
+/* ---------- helpers ---------- */
+const rnd = (a,b) => a + Math.random()*(b-a);
+const norm = () => (Math.random()+Math.random()+Math.random()-1.5)*2;
+function pickWeighted(items){ const t = items.reduce((a,i)=>a+i.sold,0); let r = Math.random()*t; for(const i of items){ r-=i.sold; if(r<=0) return i; } return items[0]; }
+function toast(msg){ const t=$('#toast'); t.textContent=msg; t.classList.add('on'); clearTimeout(toast.h); toast.h=setTimeout(()=>t.classList.remove('on'),2200); }
+function go(p){ if(location.hash==='#/'+p) render(); else location.hash='#/'+p; }
+
+/* ---------- demo-only generators ---------- */
+function demoOrders(n){
+  const names = ['Alex','Sam','Jordan','Taylor','Riley','Casey','Morgan','Jamie'];
+  mutate(S=>{ for(let k=0;k<n;k++){
+    const b = Math.floor(Math.random()*3), menu = effMenu(S,b).filter(x=>x.avail); if(!menu.length) continue; const cnt = 1+Math.floor(Math.random()*3), picked = {};
+    for(let j=0;j<cnt;j++){ const it = pickWeighted(menu); picked[it.id] = {id:it.id,name:it.name,price:it.price,cost:it.cost,qty:(picked[it.id]?picked[it.id].qty:0)+1+(Math.random()<.25?1:0)}; }
+    S.seq++; S.orders.push(orderCalc({id:'APP-'+String(S.seq).padStart(4,'0'), brand:b, items:Object.values(picked), name:names[Math.floor(Math.random()*names.length)],
+      note:'', createdAt:Date.now()-Math.floor(rnd(0,2500)), status:'new', startedAt:null, readyAt:null, prepMin:null, error:null, source:'demo'})); } });
+  toast(n+' demo orders added to the kitchen queue');
+}
+function completeAll(){
+  mutate(S=>{ S.orders.forEach(o=>{ if(o.status==='new'||o.status==='preparing'){
+    const base = DATA.base[B[o.brand]]; o.startedAt = o.startedAt||Date.now(); o.readyAt = Date.now();
+    o.prepMin = Math.max(6, Math.min(30, Math.round(base.prepAvg + norm()*3.2)));
+    if(!o.error && Math.random() < base.errorRate) o.error = ERR[Math.floor(Math.random()*ERR.length)];
+    if(Math.random()<.3) o.rating = Math.max(1,Math.min(5,Math.round(base.rating + norm()*.9)));
+    o.status='ready'; } }); });
+  toast('Open orders completed with sampled prep times (demo shortcut)');
+}
+
+/* ---------- views ---------- */
+function vHome(){
+  return `<h1>Login as</h1><p class="sub">Choose your role to enter the app. No password needed.</p>
+  <div class="grid g3">
+   <button class="card role" data-act="go" data-to="customer"><div class="ic" style="background:var(--b0)">${logoHTML('customer')}</div><h2>Customer</h2><p>Pick a brand, build an order, place it and follow its status.</p><span class="go">Enter as customer &rarr;</span></button>
+   <button class="card role" data-act="go" data-to="kitchen"><div class="ic" style="background:var(--b1)">${logoHTML('kitchen')}</div><h2>Kitchen staff</h2><p>See incoming orders, start prep, mark ready, and log any order issue.</p><span class="go">Enter as kitchen &rarr;</span></button>
+   <button class="card role" data-act="go" data-to="owner"><div class="ic" style="background:var(--b2)">${logoHTML('owner')}</div><h2>Owner</h2><p>Track revenue, profit margin, error rate and prep time, overall and by brand.</p><span class="go">Enter as owner &rarr;</span></button>
+  </div>
+  <div class="notice"><b>First time here?</b> Use <b>Take the tour</b> (top right) for a 2-minute walkthrough. Every view shares one dataset, so an order placed as a customer appears in the kitchen and in the owner's KPIs on this device.
+  <button class="btn sm alt" style="margin-left:8px" data-act="tour">Take the tour</button></div>`;
+}
+function vAbout(){
+  return `<div class="hero"><h1>Three kitchens. One ordering app.</h1>
+  <p>Customers pick a brand and order. The kitchen sees every order in one queue. The owner sees live profit margin, error rate and prep time for each brand, all from the same data.</p>
+  <div class="stats"><div><b>${DATA.base.Overall.orders.toLocaleString()}</b><span>baseline orders (${DATA.period})</span></div>
+  <div><b>${pct(DATA.base.Overall.margin)}</b><span>baseline profit margin</span></div>
+  <div><b>${pct(DATA.base.Overall.errorRate)}</b><span>baseline order error rate</span></div>
+  <div><b>${DATA.base.Overall.prepAvg.toFixed(1)} min</b><span>baseline avg prep time</span></div></div></div>
+  <button class="btn" data-act="go" data-to="home">Get started</button>`;
+}
+function vBrands(){
+  return `<h1>Order from</h1><p class="sub">Three delivery brands, one kitchen. Choose a brand to see its menu.</p>
+  <div class="grid g3">${B.map((b,i)=>{ const m = effMenu(load(),i).filter(x=>x.avail), lo = Math.min(...m.map(x=>x.price)), hi = Math.max(...m.map(x=>x.price)), top = m.slice().sort((a,c)=>c.sold-a.sold).slice(0,3).map(x=>x.name);
+   const q = Object.values(cart[i]).reduce((a,x)=>a+x,0);
+   return `<button class="card brand" style="--bc:${BC[i]}" data-act="go" data-to="customer/menu/${i}"><div class="badge">${logoHTML(i, BC[i])}</div><h2>${b}</h2><div>${TAG[i]}</div>
+     <div class="meta">${money(lo)} to ${money(hi)} &middot; about ${Math.round(DATA.base[b].prepAvg)} min prep</div><div class="meta"><b>Popular:</b> ${top.map(esc).join(', ')}</div>
+     ${q? `<span class="chip good">${q} in cart</span>`:''}</button>`; }).join('')}</div>
+  ${(()=>{ const rc = load().orders.filter(o=>o.source==='app').slice(-5).reverse(); if(!rc.length) return '';
+    return `<h2 style="margin-top:24px">Your recent orders</h2><div class="card feed">${rc.map(o=>`<div class="r"><span class="dot" style="--bc:${BC[o.brand]}"></span><span class="id">${o.id}</span><span>${B[o.brand]}</span><span class="rt">${money(o.revenue)} &middot; <b>${stLabel[o.status]}</b><button class="btn sm ghost" style="margin-left:10px" data-act="go" data-to="customer/order/${o.id}">Track</button></span></div>`).join('')}</div>`; })()}`;
+}
+function cartLines(b){ const m = effMenu(load(),b); return Object.entries(cart[b]).filter(([,q])=>q>0).map(([id,q])=>{ const it = m.find(x=>x.id===id); return it && it.avail ? {...it, qty:q} : null; }).filter(Boolean); }
+function cartBox(b, checkout){
+  const L = cartLines(b), tot = L.reduce((a,i)=>a+i.price*i.qty,0);
+  return `<div class="card cart" style="--bc:${BC[b]}"><h2>Your order <span class="chip">${B[b]}</span></h2>
+   ${L.length? L.map(i=>`<div class="row"><span>${i.qty} &times; ${esc(i.name)}</span><span>${money(i.price*i.qty)}</span></div>`).join('') + `<div class="row total"><span>Total</span><span>${money(tot)}</span></div>`
+   : '<div class="empty">Your cart is empty. Add items from the menu.</div>'}
+   ${checkout? '' : `<button class="btn" style="width:100%;margin-top:12px" data-act="go" data-to="customer/checkout/${b}" ${L.length?'':'disabled'}>Checkout</button>`}</div>`;
+}
+function vMenu(b){
+  const m = effMenu(load(),b), cats = ['Main','Side','Drink','Dessert'];
+  return `<div class="crumb"><button data-act="go" data-to="customer">&larr; All brands</button></div><h1><span class="tile" style="background:${BC[b]}">${logoHTML(b, BC[b])}</span>${B[b]}</h1><p class="sub">${TAG[b]}</p>
+  <div class="menu-layout"><div>${cats.map(c=>{ const its = m.filter(x=>x.cat===c); if(!its.length) return '';
+   return `<div class="cat"><h3>${c==='Main'?'Mains':c+'s'}</h3>${its.map(it=>{ const q = cart[b][it.id]||0;
+    return `<div class="item ${it.avail?'':'off'}" style="--bc:${BC[b]}"><div class="n">${esc(it.name)}</div><div class="p">${money(it.price)}</div>
+     ${it.avail? `<div class="step">${q? `<button data-act="dec" data-b="${b}" data-id="${it.id}" aria-label="Remove one">&minus;</button><span>${q}</span>`:''}<button class="plus" data-act="inc" data-b="${b}" data-id="${it.id}" aria-label="Add one">+</button></div>` : '<span class="chip bad">Sold out</span>'}</div>`; }).join('')}</div>`; }).join('')}</div>
+  ${cartBox(b,false)}</div>${(()=>{const L=cartLines(b);if(!L.length)return '';const q=L.reduce((x,i)=>x+i.qty,0),tt=L.reduce((x,i)=>x+i.price*i.qty,0);return `<button class="cartbar" data-act="go" data-to="customer/checkout/${b}"><span>${q} item${q>1?'s':''} in cart</span><b>Checkout &middot; ${money(tt)}</b></button>`;})()}`;
+}
+function vCheckout(b){
+  const L = cartLines(b), tot = L.reduce((a,i)=>a+i.price*i.qty,0);
+  if(!L.length) return `<div class="crumb"><button data-act="go" data-to="customer/menu/${b}">&larr; Back to menu</button></div><div class="card"><div class="empty">Your cart is empty.</div></div>`;
+  return `<div class="crumb"><button data-act="go" data-to="customer/menu/${b}">&larr; Back to menu</button></div><h1>Checkout</h1><p class="sub">${B[b]} &middot; pickup order</p>
+  <div class="menu-layout"><div class="card"><label class="f" for="cname">Name for the order</label><input type="text" id="cname" placeholder="Guest" value="${esc(cname)}" maxlength="30">
+   <label class="f" for="cnote">Notes for the kitchen (optional)</label><textarea id="cnote" rows="3" placeholder="e.g. no onions"></textarea>
+   <label class="f">Payment</label><div class="pay"><b>Pay at pickup</b><span>Demo mode: no card or password needed.</span></div>
+   <button class="btn alt" style="margin-top:16px" data-act="place" data-b="${b}">Place order &middot; ${money(tot)}</button></div>${cartBox(b,true)}</div>`;
+}
+const STAGES = [['new','Received'],['preparing','Preparing'],['ready','Ready for pickup']];
+function vTrack(id){
+  const o = load().orders.find(x=>x.id===id);
+  if(!o) return `<div class="card"><div class="empty">Order not found. It may have been cleared by <b>Reset demo</b>.</div><button class="btn" data-act="go" data-to="customer">Back to brands</button></div>`;
+  const idx = o.status==='picked'?3: STAGES.findIndex(s=>s[0]===o.status);
+  return `<div class="crumb"><button data-act="go" data-to="customer">&larr; Order something else</button></div>
+  <div class="card" style="--bc:${BC[o.brand]}"><div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap"><h1 style="margin:0">Order ${esc(o.id)}</h1><span class="chip" style="background:${BC[o.brand]};color:#fff">${B[o.brand]}</span></div>
+   <p class="sub" style="margin-top:4px">Thanks${o.name&&o.name!=='Guest'?', '+esc(o.name):''}! This page updates as the kitchen works on your order.</p>
+   <div class="track">${STAGES.map((s,i)=>`<div class="s ${i<idx?'done':i===idx?'cur':''}"><b>${i<idx||idx===3?'&check;':i+1}</b>${s[1]}</div>`).join('')}</div>
+   <p style="text-align:center;margin:6px 0 16px;color:var(--muted)">${idx===3?'Picked up. Enjoy!': o.status==='ready'?'Your order is ready at the counter.': o.status==='preparing'?'The kitchen is cooking your order now.':'Typical prep time for '+B[o.brand]+': about '+Math.round(DATA.base[B[o.brand]].prepAvg)+' min (from 6 weeks of orders).'}</p>
+   ${isDone(o)? `<div class="rate">${o.rating? `<p>Thanks for the feedback! You rated this order <b>${o.rating} / 5</b>.</p>` : `<p><b>How was your order?</b> Tap a star to rate it.</p><div class="stars">${[5,4,3,2,1].map(n=>`<button data-act="rate" data-id="${o.id}" data-v="${n}" aria-label="${n} star${n>1?'s':''}">&#9733;</button>`).join('')}</div>`}</div>`:''}
+   <h2>Order summary</h2>${o.items.map(i=>`<div class="cart"><div class="row" style="position:static"><span>${i.qty} &times; ${esc(i.name)}</span><span>${money(i.price*i.qty)}</span></div></div>`).join('')}
+   <div class="cart"><div class="row total"><span>Total (pay at pickup)</span><span>${money(o.revenue)}</span></div></div>
+   ${o.note?`<p class="sub">Note: ${esc(o.note)}</p>`:''}
+   <div style="margin-top:14px;display:flex;gap:8px;flex-wrap:wrap"><button class="btn ghost" data-act="go" data-to="kitchen">Open the kitchen view</button><button class="btn ghost" data-act="go" data-to="owner">Open the owner dashboard</button></div></div>`;
+}
+function orderCard(o){
+  const timer = o.status==='new' ? `Waiting <b><span data-since="${o.createdAt}">0</span> min</b>` : o.status==='preparing' ? `Cooking <b><span data-since="${o.startedAt}">0</span> min</b>` : `Prep time <b>${o.prepMin} min</b>`;
+  const acts = o.status==='new' ? `<button class="btn sm" data-act="start" data-id="${o.id}">Start prep</button>` : o.status==='preparing' ? `<button class="btn sm alt" data-act="ready" data-id="${o.id}">Mark ready</button>` : `<button class="btn sm ghost" data-act="picked" data-id="${o.id}">Picked up</button>`;
+  const issue = o.status==='new' ? '' : (o.error ? `<div class="issue"><span class="chip bad">Issue: ${esc(o.error)}</span><button class="btn sm ghost" data-act="clearissue" data-id="${o.id}">Clear</button></div>`
+    : `<div class="issue"><select data-issue="${o.id}" aria-label="Issue type">${ERR.map(e=>`<option>${e}</option>`).join('')}</select><button class="btn sm ghost" data-act="logissue" data-id="${o.id}">Log issue</button></div>`);
+  return `<div class="oc" style="--bc:${BC[o.brand]}"><div class="oc-h"><b>${esc(o.id)}</b><span class="chip" style="background:${BC[o.brand]};color:#fff">${B[o.brand]}</span>${o.source==='demo'?'<span class="chip demo">DEMO</span>':''}${o.source==='walkin'?'<span class="chip">'+esc(o.channel||'Walk-in')+'</span>':''}</div>
+   <ul>${o.items.map(i=>`<li>${i.qty} &times; ${esc(i.name)}</li>`).join('')}</ul>${o.note?`<div class="meta">Note: ${esc(o.note)}</div>`:''}
+   <div class="meta">${esc(o.name||'Guest')} &middot; ${timer}</div><div class="acts">${acts}</div>${issue}</div>`;
+}
+function wiForm(S){
+  if(!wi.open) return '';
+  const m = effMenu(S,wi.b).filter(x=>x.avail), L = m.filter(x=>wi.items[x.id]>0), tot = L.reduce((a,i)=>a+i.price*wi.items[i.id],0), cnt = L.reduce((a,i)=>a+wi.items[i.id],0);
+  return `<div class="card" style="margin-bottom:14px;--bc:${BC[wi.b]}"><h2>New walk-in / phone order</h2>
+   <p class="sub" style="margin-bottom:10px;font-size:.9rem">For orders that do not come through the app (phone calls, counter orders). They join the same queue and count in the same KPIs, replacing the paper notebook.</p>
+   <div class="wi"><div><label class="f" for="wibrand">Brand</label><select id="wibrand">${B.map((b,i)=>`<option value="${i}" ${i===wi.b?'selected':''}>${b}</option>`).join('')}</select>
+    <label class="f" for="wichan">Order source</label><select id="wichan">${['Phone','Walk-in'].map(c=>`<option ${c===wi.channel?'selected':''}>${c}</option>`).join('')}</select>
+    <label class="f" for="winame">Customer name (optional)</label><input type="text" id="winame" maxlength="30" value="${esc(wi.name)}" placeholder="Guest"></div>
+    <div class="wi-items">${m.map(it=>{ const q = wi.items[it.id]||0; return `<div class="item" style="--bc:${BC[wi.b]}"><div class="n">${esc(it.name)}</div><div class="p">${money(it.price)}</div><div class="step">${q?`<button data-act="wi-dec" data-id="${it.id}" aria-label="Remove one">&minus;</button><span>${q}</span>`:''}<button class="plus" data-act="wi-inc" data-id="${it.id}" aria-label="Add one">+</button></div></div>`; }).join('')}</div></div>
+   <div style="display:flex;gap:8px;align-items:center;margin-top:12px;flex-wrap:wrap"><button class="btn alt" data-act="wi-place" ${L.length?'':'disabled'}>Add to queue &middot; ${money(tot)}</button><button class="btn ghost" data-act="wi-cancel">Cancel</button><span class="sub" style="margin:0">${cnt? cnt+' item'+(cnt>1?'s':''):'Pick at least one item'}</span></div></div>`;
+}
+function vKitchen(){
+  const S = load(), all = S.orders.filter(o=>o.status!=='picked'), os = all.filter(o=>kFilter<0||o.brand===kFilter), k = kpis(S);
+  const col = (st,title)=>{ const l = os.filter(o=>o.status===st).sort((a,b)=>a.createdAt-b.createdAt); return `<div class="col"><h3><span>${title}</span><span>${l.length}</span></h3>${st==='ready'&&l.length?'<button class="btn sm ghost" style="margin:0 0 10px" data-act="pickall">Pick up all</button>':''}${l.map(orderCard).join('') || '<div class="empty" style="padding:6px 4px">Nothing here.</div>'}</div>`; };
+  return `<h1>Kitchen queue</h1><p class="sub">Orders from every brand arrive here the moment they are placed. Demo clock: 5 seconds = 1 minute.</p>
+  <div class="kstats"><div><b>${all.length}</b><span>open orders</span></div><div><b>${k.doneN}</b><span>completed this session</span></div>
+   <div><b>${k.prepAvg==null?'–':k.prepAvg.toFixed(1)+' min'}</b><span>avg prep (this session)</span></div><div><b>${k.errN}</b><span>issues logged</span></div></div>
+  <div class="kbar"><button class="fchip ${kFilter<0?'on':''}" data-act="kf" data-b="-1">All brands</button>${B.map((b,i)=>`<button class="fchip ${kFilter===i?'on':''}" data-act="kf" data-b="${i}"><span class="dot" style="--bc:${BC[i]}"></span>${b}</button>`).join('')}
+   <span class="sp"></span><button class="btn sm" data-act="wi-open">+ Walk-in / phone order</button><button class="fchip" data-act="snd">Sound: ${sound?'on':'off'}</button><button class="btn sm ghost" data-act="rush">Simulate lunch rush (8 orders)</button><button class="btn sm ghost" data-act="complete">Complete all open (demo)</button></div>
+  ${wiForm(S)}
+  <div class="cols">${col('new','New')}${col('preparing','Preparing')}${col('ready','Ready for pickup')}</div>
+  ${S.orders.length===0?'<div class="notice">No orders yet. Place one from the <b>Customer</b> view, or use <b>Simulate lunch rush</b> to fill the queue.</div>':''}`;
+}
+/* owner */
+function cmpRow(label, base, live, o){ // o: max, fmt, target, color
+  const w = v => Math.max(1, Math.min(100, v/o.max*100));
+  return `<div class="cmp"><div class="cmp-l">${label}</div><div class="cmp-b">
+   <div class="bar"><i style="width:${w(base)}%;background:var(--base)"></i><em>${o.fmt(base)}</em></div>
+   <div class="bar">${live==null?'<em style="color:var(--muted)">no data yet</em>':`<i style="width:${w(live)}%;background:${o.color}"></i><em>${o.fmt(live)}</em>`}</div>
+   ${o.target!=null?`<u class="tick" style="left:${w(o.target)}%" title="Target"></u>`:''}</div></div>`;
+}
+function cmpChart(title, rows, o, note){
+  return `<div class="card"><h2>${title}</h2>${rows.map(r=>cmpRow(r.label, r.base, r.live, {...o, color:r.color})).join('')}
+   <div class="legend"><span style="--c:var(--base)">Baseline (6 wks)</span><span style="--c:var(--navy2)">Live (app orders)</span>${o.target!=null?'<span style="--c:var(--bad)">Target</span>':''}</div>${note?`<div class="legend">${note}</div>`:''}</div>`;
+}
+function kpiCard(lab, big, src, rows, pill){
+  return `<div class="card kpi"><div class="lab"><span>${lab}</span>${pill||''}</div><div class="big">${big}</div><div class="src">${src}</div><table>${rows.map(r=>`<tr><td>${r[0]}</td><td>${r[1]}</td></tr>`).join('')}</table></div>`;
+}
+function statusPill(val, n, good){ if(val==null||n<MIN_N) return `<span class="chip">${n<MIN_N&&n>0?'Need '+MIN_N+'+':'No live data'}</span>`; return good? '<span class="chip good">Target met</span>':'<span class="chip warn">Below target</span>'; }
+function peak(base){ const h = Object.entries(base.hours).map(([k,v])=>[+k,v]); const tot = h.reduce((a,x)=>a+x[1],0); const top = h.slice().sort((a,b)=>b[1]-a[1]).slice(0,3); return {h, tot, top:top.map(x=>x[0]).sort((a,b)=>a-b), share: top.reduce((a,x)=>a+x[1],0)/tot}; }
+const hr = h => (h%12||12) + (h<12?'am':'pm');
+function tgtBox(){
+  const f = v => (v*100).toFixed(1).replace(/\.0$/,'');
+  return `<details class="tgt"><summary>Edit KPI targets</summary><div class="tgt-in"><label>Profit margin target (%)<input type="number" id="tmargin" min="1" max="99" step="0.5" value="${f(TARGET.margin)}"></label>
+   <label>Error rate target (%)<input type="number" id="terr" min="0.5" max="99" step="0.5" value="${f(TARGET.err)}"></label><button class="btn sm ghost" data-act="tgt-reset">Reset to 55% / 3%</button></div></details>`;
+}
+const HIST_ST = [['','All statuses'],['new','Received'],['preparing','Preparing'],['ready','Ready'],['picked','Picked up']];
+function historyCard(S, bi){
+  const os = S.orders.filter(o=>bi==null||o.brand===bi).slice().reverse();
+  const sel = (id, opts, cur) => `<select id="${id}">${opts.map(([v,l])=>`<option value="${v}" ${v===cur?'selected':''}>${l}</option>`).join('')}</select>`;
+  return `<div class="card" style="margin-top:14px"><h2>Order history</h2>
+   <div class="hfilters"><input type="text" id="hq" placeholder="Search order ID, name or item" value="${esc(hf.q)}" aria-label="Search orders">
+    ${sel('hst', HIST_ST, hf.st)}${sel('hiss', [['','All issues'],['none','No issue'],['any','Any issue'],...ERR.map(e=>[e,e])], hf.iss)}${sel('hch', [['','All sources'],['App','App'],['Phone','Phone'],['Walk-in','Walk-in'],['Demo','Demo']], hf.ch)}</div>
+   <div class="legend" style="margin:8px 0"><span id="hcount" style="--c:transparent"></span></div>
+   <div style="overflow:auto"><table class="t"><tr><th>Order</th><th>Time</th><th>Brand</th><th>Source</th><th>Items</th><th class="r">Total</th><th>Status</th><th class="r">Prep</th><th>Issue</th><th class="r">Rating</th></tr>
+   ${os.map(o=>`<tr class="hrow" data-q="${esc((o.id+' '+(o.name||'')+' '+o.items.map(i=>i.name).join(' ')).toLowerCase())}" data-st="${o.status}" data-iss="${o.error||'none'}" data-ch="${chan(o)}">
+     <td><b>${o.id}</b></td><td>${new Date(o.createdAt).toTimeString().slice(0,5)}</td><td><span class="dot" style="--bc:${BC[o.brand]}"></span>${B[o.brand]}</td><td>${chan(o)}</td>
+     <td>${o.items.map(i=>i.qty+'&times; '+esc(i.name)).join(', ')}</td><td class="r">${money(o.revenue)}</td><td>${stLabel[o.status]}</td><td class="r">${o.prepMin==null?'–':o.prepMin+' min'}</td>
+     <td>${o.error?'<span class="chip bad">'+esc(o.error)+'</span>':'–'}</td><td class="r">${o.rating? o.rating+' &#9733;':'–'}</td></tr>`).join('')}</table></div>
+   ${os.length?'':'<div class="empty">No app orders yet. Orders appear here as soon as they are placed.</div>'}</div>`;
+}
+function applyHistory(){
+  const rows = document.querySelectorAll('.hrow'), c = $('#hcount'); if(!c) return;
+  const q = hf.q.trim().toLowerCase(); let n = 0;
+  rows.forEach(rw=>{ const d = rw.dataset;
+    const ok = (!q || d.q.includes(q)) && (!hf.st || d.st===hf.st) && (!hf.ch || d.ch===hf.ch) && (!hf.iss || (hf.iss==='any' ? d.iss!=='none' : d.iss===hf.iss));
+    rw.style.display = ok ? '' : 'none'; if(ok) n++; });
+  c.textContent = 'Showing ' + n + ' of ' + rows.length + ' orders';
+}
+function vOwner(){
+  const S = load(), tab = ownerTab, key = tab==='all'?'Overall':B[+tab], bi = tab==='all'?null:+tab, base = DATA.base[key], L = kpis(S, bi);
+  const tabs = `<div class="tabs"><button class="tab ${tab==='all'?'on':''}" data-act="otab" data-t="all">Overall</button>${B.map((b,i)=>`<button class="tab ${tab==i?'on':''}" data-act="otab" data-t="${i}"><span class="dot" style="--bc:${BC[i]}"></span>${b}</button>`).join('')}</div>${tgtBox()}`;
+  const mOK = L.margin!=null && L.margin>=TARGET.margin, eOK = L.errRate!=null && L.errRate<=TARGET.err;
+  const cards = `<div class="grid g5">
+   ${kpiCard('Revenue', L.n>=MIN_N? money0(L.rev) : money0(base.revenue), L.n>=MIN_N? `Live &middot; ${L.n} app orders`:'Baseline &middot; 6 weeks', [['Baseline (6 wks)', money0(base.revenue)],['Live (app)', L.n? money0(L.rev):'–'],['Avg order value', (L.aov!=null? money(L.aov):'–')+' vs '+money(base.revenue/base.orders)]])}
+   ${kpiCard('Profit margin', pct(L.n>=MIN_N?L.margin:base.margin), L.n>=MIN_N?`Live &middot; ${L.n} app orders`:'Baseline &middot; 6 weeks', [['Baseline', pct(base.margin)],['Live (app)', L.margin==null?'–':pct(L.margin)],['Target', tp(TARGET.margin)+'+']], statusPill(L.margin, L.n, mOK))}
+   ${kpiCard('Order error rate', pct(L.doneN>=MIN_N?L.errRate:base.errorRate), L.doneN>=MIN_N?`Live &middot; ${L.doneN} completed orders`:'Baseline &middot; 6 weeks', [['Baseline', pct(base.errorRate)],['Live (app)', L.errRate==null?'–':pct(L.errRate)],['Target', 'under '+tp(TARGET.err)]], statusPill(L.errRate, L.doneN, eOK))}
+   ${kpiCard('Avg prep time', (L.doneN>=MIN_N?L.prepAvg:base.prepAvg).toFixed(1)+' min', L.doneN>=MIN_N?`Live &middot; ${L.doneN} completed orders`:'Baseline &middot; 6 weeks', [['Baseline', base.prepAvg.toFixed(1)+' min'],['Live (app)', L.prepAvg==null?'–':L.prepAvg.toFixed(1)+' min'],['Orders with prep logged', base.prepN+' baseline']])}
+   ${kpiCard('Customer rating', (L.ratingN>=RATE_MIN?L.ratingAvg:base.rating).toFixed(2)+' / 5', L.ratingN>=RATE_MIN?`Live &middot; ${L.ratingN} ratings`:'Baseline &middot; 6 weeks', [['Baseline', base.rating.toFixed(2)+' ('+base.ratingN+')'],['Live (app)', L.ratingAvg==null?'–':L.ratingAvg.toFixed(2)+' ('+L.ratingN+')'],['Orders rated (live)', L.n? Math.round(L.ratingN/L.n*100)+'%':'–']])}
+  </div>`;
+  const pk = peak(base), maxH = Math.max(...pk.h.map(x=>x[1]));
+  const hours = `<div class="card"><h2>Peak hours (baseline)</h2><div class="cols2">${pk.h.map(([h,v])=>`<div class="c">${pk.top.includes(h)?v:''}<i style="height:${v/maxH*82}%;background:${pk.top.includes(h)?'var(--bad)':'var(--base)'}"></i></div>`).join('')}</div>
+   <div class="hl">${pk.h.map(([h])=>`<span>${h%12||12}</span>`).join('')}</div><div class="legend">Hour of day. Red = three busiest hours: ${pk.top.map(hr).join(', ')} (${pct(pk.share,0)} of orders).</div></div>`;
+  const etRows = Object.entries(base.errTypes).sort((a,b)=>b[1]-a[1]), etTot = etRows.reduce((a,x)=>a+x[1],0);
+  const errs = `<div class="card"><h2>Order issues by type</h2>${etRows.map(([k,v])=>`<div class="cmp" style="grid-template-columns:120px 1fr"><div class="cmp-l">${k}</div><div class="cmp-b"><div class="bar"><i style="width:${v/etRows[0][1]*100}%;background:var(--warn)"></i><em>${Math.round(v/etTot*100)}% &middot; live: ${L.errTypes[k]||0}</em></div></div></div>`).join('')}<div class="legend">Share of baseline issues, with live issues logged in the kitchen.</div></div>`;
+  let brandCharts = '';
+  if(tab==='all'){
+    const rows = B.map((b,i)=>({label:b, base:DATA.base[b], live:kpis(S,i), color:BC[i]}));
+    brandCharts = `<div class="grid g2" style="margin-top:14px">
+     ${cmpChart('Profit margin by brand', rows.map(r=>({label:r.label, base:r.base.margin, live:r.live.margin, color:r.color})), {max:0.8, fmt:v=>pct(v), target:TARGET.margin})}
+     ${cmpChart('Order error rate by brand', rows.map(r=>({label:r.label, base:r.base.errorRate, live:r.live.errRate, color:r.color})), {max:0.1, fmt:v=>pct(v), target:TARGET.err}, 'Live rates are reliable after '+MIN_N+'+ completed orders per brand.')}
+     ${cmpChart('Average prep time by brand', rows.map(r=>({label:r.label, base:r.base.prepAvg, live:r.live.prepAvg, color:r.color})), {max:30, fmt:v=>v.toFixed(1)+' min', target:null})}
+     ${errs}</div>`;
+  } else {
+    const m = effMenu(S, bi), liveUnits = {}; S.orders.filter(o=>o.brand===bi).forEach(o=>o.items.forEach(i=>liveUnits[i.id]=(liveUnits[i.id]||0)+i.qty));
+    const changed = m.some(it=>S.menuOv[it.id]);
+    brandCharts = `<div class="grid g2" style="margin-top:14px">${hours}${errs}</div>
+     <div class="card" style="margin-top:14px"><div style="display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap;align-items:center"><h2 style="margin:0">Menu manager</h2>${changed?`<button class="btn sm ghost" data-act="mm-reset" data-b="${bi}">Reset to original prices</button>`:''}</div>
+      <p class="sub" style="margin:4px 0 10px;font-size:.88rem">Change a price or mark an item sold out. The customer menu updates right away, and new orders use the new price.</p>
+      <div style="overflow:auto"><table class="t"><tr><th>Item</th><th class="r">Price</th><th class="r">Food margin</th><th class="r">Availability</th><th class="r">Units sold (baseline)</th><th class="r">Units (live)</th></tr>
+      ${m.slice().sort((a,b)=>b.sold-a.sold).map(it=>`<tr class="${it.avail?'':'off'}"><td>${esc(it.name)}${it.price!==it.basePrice?' <span class="chip demo">edited</span>':''}</td>
+       <td class="r"><input type="number" class="pin" step="0.01" min="0.01" value="${it.price.toFixed(2)}" data-mm="price" data-id="${it.id}" aria-label="Price for ${esc(it.name)}"></td>
+       <td class="r">${pct((it.price-it.cost)/it.price,0)}</td>
+       <td class="r"><label class="sw"><input type="checkbox" data-mm="avail" data-id="${it.id}" ${it.avail?'checked':''}><span>${it.avail?'On menu':'Sold out'}</span></label></td>
+       <td class="r">${it.sold}</td><td class="r">${liveUnits[it.id]||0}</td></tr>`).join('')}</table></div>
+      <div class="legend">Food margin = (price - food cost) / price, before platform commission.</div></div>`;
+  }
+  /* alerts + staffing */
+  const now = Date.now(), al = [];
+  S.orders.filter(o=>(bi==null||o.brand===bi)).forEach(o=>{
+    if(o.status==='new' && simMin(now-o.createdAt)>8) al.push(['warn', `${o.id} (${B[o.brand]}) has waited ${Math.floor(simMin(now-o.createdAt))} min without being started.`]);
+    if(o.status==='preparing' && simMin(now-o.startedAt)>base.prepAvg+3) al.push(['warn', `${o.id} (${B[o.brand]}) has been cooking ${Math.floor(simMin(now-o.startedAt))} min, above the ${base.prepAvg.toFixed(0)} min brand average.`]); });
+  if(L.errRate!=null && L.doneN>=MIN_N && L.errRate>TARGET.err) al.push(['warn', `Live error rate is ${pct(L.errRate)}, above the ${tp(TARGET.err)} target.`]);
+  const wt = DATA.base['Wing Theory']; if(tab==='all'||tab==1) al.push(['info', `Wing Theory has the lowest baseline margin (${pct(wt.margin)}) and slowest prep (${wt.prepAvg.toFixed(1)} min). Worth reviewing its menu costs and station setup.`]);
+  al.push(['info', `Staffing suggestion: add a second cook during ${pk.top.map(hr).join(', ')}. Those hours carry ${pct(pk.share,0)} of ${tab==='all'?'all':B[+tab]} orders.`]);
+  if(al.length===1) al.unshift(['ok','No live alerts. Orders are moving normally.']);
+  const alerts = `<div class="card"><h2>Alerts &amp; suggestions</h2>${al.map(a=>`<div class="alert ${a[0]==='warn'?'':a[0]}">${a[1]}</div>`).join('')}</div>`;
+  const recent = S.orders.filter(o=>bi==null||o.brand===bi).slice(-8).reverse();
+  const feed = `<div class="card feed"><h2>Live order feed</h2>${recent.length? recent.map(o=>`<div class="r"><span class="dot" style="--bc:${BC[o.brand]}"></span><span class="id">${o.id}</span><span>${B[o.brand]}${o.source==='demo'?' <span class="chip demo">DEMO</span>':''}${o.source==='walkin'?' <span class="chip">'+esc(o.channel||'Walk-in')+'</span>':''}</span>
+     <span class="rt">${money(o.revenue)} &middot; <b>${o.status==='new'?'Received':o.status==='preparing'?'Preparing':'Done'+(o.prepMin?' in '+o.prepMin+' min':'')}</b>${o.error?' <span class="chip bad">'+esc(o.error)+'</span>':''}</span></div>`).join('') : '<div class="empty">No app orders yet. Place one as a customer, or use Simulate lunch rush in the kitchen view.</div>'}</div>`;
+  const last = S.orders[S.orders.length-1];
+  const flow = `<div class="card" style="margin-top:14px"><h2>How the data moves</h2><div class="flow"><div><b>1. Order placed</b>App checkout or a walk-in entry writes one record per order</div><div class="arr">&rarr;</div>
+    <div><b>2. Shared store</b>${S.orders.length} orders saved (${S.orders.filter(o=>o.source!=='demo').length} real, ${S.orders.filter(o=>o.source==='demo').length} demo)</div><div class="arr">&rarr;</div>
+    <div><b>3. Kitchen updates</b>Start, ready and issue logs add prep time and errors</div><div class="arr">&rarr;</div>
+    <div><b>4. KPI engine</b>Revenue, margin, error rate and prep time recalculated for each brand</div></div>
+   <details><summary>See the latest order record and export the data</summary>
+    <pre class="code">${last? esc(JSON.stringify(last,null,2)) : '// No orders yet. Place an order to see its record here.'}</pre>
+    <div style="margin-top:10px"><button class="btn sm" data-act="csv" ${S.orders.length?'':'disabled'}>Download orders as CSV</button> <span class="sub" style="margin:0 0 0 8px;font-size:.82rem">Same columns as the 6-week dataset, so app orders can be appended to it.</span></div></details></div>`;
+  return `<h1>Owner dashboard</h1><p class="sub">Baseline = real orders from ${DATA.period}. Live = orders placed in this prototype (demo clock, no platform commission on direct app orders).</p>${tabs}${cards}${brandCharts}
+   <div class="grid g2" style="margin-top:14px">${alerts}${feed}</div>${tab==='all'?`<div style="margin-top:14px">${hours}</div>`:''}${historyCard(S,bi)}${flow}`;
+}
+
+/* ---------- tour ---------- */
+const TOUR = [
+ {t:'Welcome',b:'<p>This prototype shows how one ordering app can replace three separate delivery platforms for the Ghost Kitchen. It has three views that share the same data: <b>Customer</b>, <b>Kitchen</b> and <b>Owner</b>. No login or password is needed.</p>'},
+ {t:'1. Customer: place an order',b:'<ul><li>Choose a brand (Super Galactic, Wing Theory or Bowl Barn).</li><li>Add items with the + button and open <b>Checkout</b>.</li><li>Place the order and watch the status tracker. When it is ready, rate it with the stars.</li><li>Your recent orders stay on the brand page so you can reopen the tracker.</li></ul>',go:['customer','Open customer view']},
+ {t:'2. Kitchen: work the queue',b:'<ul><li>The new order appears instantly in the queue.</li><li>Press <b>Start prep</b>, then <b>Mark ready</b>. The app records prep time.</li><li>If something goes wrong, log an issue (missing item, wrong item, and so on).</li><li>Use <b>+ Walk-in / phone order</b> to key in orders that do not come through the app.</li><li>Use <b>Simulate lunch rush</b> to fill the queue quickly.</li></ul>',go:['kitchen','Open kitchen view']},
+ {t:'3. Owner: track the KPIs',b:'<ul><li>Switch between <b>Overall</b> and each brand.</li><li>Each KPI shows baseline, live and target side by side.</li><li>See alerts, staffing suggestions and the live order feed.</li><li>Open a brand tab to use the <b>Menu manager</b> (change prices or mark items sold out) and edit the KPI targets.</li><li>Search and filter every order in <b>Order history</b>.</li></ul>',go:['owner','Open owner dashboard']},
+ {t:'4. How the data flows',b:'<p>Order placed &rarr; saved once in a shared store &rarr; kitchen adds prep time and issues &rarr; KPIs are recalculated for the owner. At the bottom of the owner page you can inspect the latest record and download all orders as a CSV with the same columns as the 6-week dataset.</p>'},
+ {t:'Prototype notes',b:'<ul><li>Orders are stored in this browser, so all three views work on the same device (open them in different tabs to see live updates).</li><li>Demo clock: 5 seconds = 1 minute in the kitchen.</li><li>Simulated orders are labelled <b>DEMO</b>. Baseline numbers come from the real dataset.</li><li><b>Reset demo</b> clears everything.</li></ul>'}
+];
+let tourI = 0;
+function tour(i){
+  tourI = i; const s = TOUR[i], m = $('#modal'); m.classList.add('on');
+  m.innerHTML = `<div class="mbox" role="dialog" aria-modal="true"><div class="stepn">Step ${i+1} of ${TOUR.length}</div><h2>${s.t}</h2><div class="body">${s.b}</div>
+   <div class="foot"><div class="dots">${TOUR.map((_,j)=>`<i class="${j===i?'on':''}"></i>`).join('')}</div><span class="sp"></span>
+   ${s.go?`<button class="btn ghost sm" data-act="tourgo" data-to="${s.go[0]}">${s.go[1]}</button>`:''}
+   ${i>0?'<button class="btn ghost sm" data-act="tourprev">Back</button>':''}
+   ${i<TOUR.length-1?'<button class="btn sm" data-act="tournext">Next</button>':'<button class="btn sm alt" data-act="tourclose">Start exploring</button>'}</div></div>`;
+}
+
+/* ---------- router + events ---------- */
+function render(){
+  const S0 = load(); TARGET.margin = S0.targets.margin!=null ? S0.targets.margin : 0.55; TARGET.err = S0.targets.err!=null ? S0.targets.err : 0.03;
+  const p = (location.hash.replace(/^#\/?/,'')||'home').split('/'), a = $('#app'); let html;
+  const role = p[0]==='customer'||p[0]==='kitchen'||p[0]==='owner'? p[0] : null;
+  document.querySelectorAll('#nav button').forEach(b=>b.classList.toggle('on', b.dataset.role===role));
+  const b = +p[2];
+  $('#aboutBtn').classList.toggle('on', p[0]==='about');
+  if(p[0]==='customer'){ if(p[1]==='menu'&&b>=0&&b<3) html = vMenu(b); else if(p[1]==='checkout'&&b>=0&&b<3) html = vCheckout(b); else if(p[1]==='order') html = vTrack(p[2]); else html = vBrands(); }
+  else if(p[0]==='kitchen') html = vKitchen();
+  else if(p[0]==='owner'){ if(p[1]!==undefined && ['all','0','1','2'].includes(p[1])) ownerTab = p[1]; html = vOwner(); }
+  else if(p[0]==='about') html = vAbout();
+  else html = vHome();
+  const keep = ['cname','winame'].includes(document.activeElement && document.activeElement.id);
+  if(!keep){ a.innerHTML = html + `<div class="foot-note">Team 5 &middot; IS 5960 Master Research Project &middot; Saint Louis University &middot; Interactive prototype</div>`; }
+  applyHistory(); tick(); prevNew = S0.orders.filter(o=>o.status==='new').length;
+}
+function tick(){ document.querySelectorAll('[data-since]').forEach(el=>{ el.textContent = Math.max(0, Math.floor(simMin(Date.now()-(+el.dataset.since)))); }); }
+setInterval(tick, 1000);
+setInterval(()=>{ if((location.hash||'').startsWith('#/owner')) { const o=document.activeElement; if(!(o&&['SUMMARY','INPUT','SELECT','TEXTAREA'].includes(o.tagName))) render(); } }, 5000);
+window.addEventListener('hashchange', ()=>{ window.scrollTo(0,0); render(); });
+function beep(){ try{ const A = window.AudioContext||window.webkitAudioContext, c = new A(), o = c.createOscillator(), g = c.createGain(); o.type='sine'; o.frequency.value=880; g.gain.value=.08; o.connect(g); g.connect(c.destination); o.start(); setTimeout(()=>{ o.stop(); c.close(); },200); }catch(e){} }
+window.addEventListener('storage', e=>{ if(e.key!==KEY) return; const before = prevNew; render();
+  if(sound && (location.hash||'').startsWith('#/kitchen') && before!=null && load().orders.filter(o=>o.status==='new').length>before){ beep(); toast('New order arrived'); } });
+document.addEventListener('change', e=>{ const t = e.target;
+  if(t.id==='wibrand'){ wi.b = +t.value; wi.items = {}; render(); }
+  else if(t.id==='wichan'){ wi.channel = t.value; }
+  else if(t.dataset && t.dataset.mm){ const id = t.dataset.id, it = findItem(id); if(!it) return;
+    if(t.dataset.mm==='price'){ const v = parseFloat(t.value);
+      if(!(v>it.cost)){ toast('Price must be above the food cost ('+money(it.cost)+')'); render(); return; }
+      mutate(S=>{ const ov = S.menuOv[id] = S.menuOv[id]||{}; if(Math.abs(v-it.price)<1e-9) delete ov.price; else ov.price = +v.toFixed(2); if(!Object.keys(ov).length) delete S.menuOv[id]; }); toast(it.name+' is now '+money(v)); }
+    else { mutate(S=>{ const ov = S.menuOv[id] = S.menuOv[id]||{}; if(t.checked) delete ov.avail; else ov.avail = false; if(!Object.keys(ov).length) delete S.menuOv[id]; }); toast(it.name+(t.checked?' is back on the menu':' marked sold out')); } }
+  else if(t.id==='tmargin'||t.id==='terr'){ const v = parseFloat(t.value); if(!(v>0&&v<100)){ toast('Enter a percentage between 0 and 100'); render(); return; } mutate(S=>{ S.targets[t.id==='tmargin'?'margin':'err'] = v/100; }); toast('Target updated'); }
+  else if(t.id==='hst'||t.id==='hiss'||t.id==='hch'){ hf[{hst:'st',hiss:'iss',hch:'ch'}[t.id]] = t.value; applyHistory(); }
+});
+document.addEventListener('input', e=>{ const t = e.target; if(t.id==='winame') wi.name = t.value; else if(t.id==='hq'){ hf.q = t.value; applyHistory(); } });
+
+document.addEventListener('click', e=>{
+  const t = e.target.closest('[data-act]'); if(!t) return; const d = t.dataset, act = d.act;
+  if(act==='go') go(d.to);
+  else if(act==='inc'||act==='dec'){ const c = cart[+d.b]; c[d.id] = Math.max(0,(c[d.id]||0)+(act==='inc'?1:-1)); if(!c[d.id]) delete c[d.id]; render(); }
+  else if(act==='place'){ const b = +d.b, L = cartLines(b); if(!L.length) return; const nm = ($('#cname')||{}).value, nt = ($('#cnote')||{}).value; cname = nm||''; let id;
+    mutate(S=>{ S.seq++; id = 'APP-'+String(S.seq).padStart(4,'0'); S.orders.push(orderCalc({id, brand:b, items:L.map(i=>({id:i.id,name:i.name,price:i.price,cost:i.cost,qty:i.qty})), name:(nm||'').trim()||'Guest', note:(nt||'').trim(), createdAt:Date.now(), status:'new', startedAt:null, readyAt:null, prepMin:null, error:null, source:'app'})); });
+    cart[b] = {}; go('customer/order/'+id); }
+  else if(act==='start') mutate(S=>{ const o=S.orders.find(x=>x.id===d.id); if(o&&o.status==='new'){ o.status='preparing'; o.startedAt=Date.now(); } });
+  else if(act==='ready') mutate(S=>{ const o=S.orders.find(x=>x.id===d.id); if(o&&o.status==='preparing'){ o.status='ready'; o.readyAt=Date.now(); o.prepMin=Math.max(1,Math.round(simMin(o.readyAt-o.startedAt))); } });
+  else if(act==='picked') mutate(S=>{ const o=S.orders.find(x=>x.id===d.id); if(o) o.status='picked'; });
+  else if(act==='logissue'){ const sel = document.querySelector(`select[data-issue="${d.id}"]`); const v = sel?sel.value:ERR[0]; mutate(S=>{ const o=S.orders.find(x=>x.id===d.id); if(o) o.error=v; }); toast('Issue logged: '+v); }
+  else if(act==='clearissue') mutate(S=>{ const o=S.orders.find(x=>x.id===d.id); if(o) o.error=null; });
+  else if(act==='kf'){ kFilter = +d.b; render(); }
+  else if(act==='otab'){ ownerTab = d.t; render(); }
+  else if(act==='wi-open'){ wi.open = !wi.open; render(); }
+  else if(act==='wi-cancel'){ wi = {open:false, b:0, items:{}, name:'', channel:'Phone'}; render(); }
+  else if(act==='wi-inc'||act==='wi-dec'){ wi.items[d.id] = Math.max(0,(wi.items[d.id]||0)+(act==='wi-inc'?1:-1)); if(!wi.items[d.id]) delete wi.items[d.id]; render(); }
+  else if(act==='wi-place'){ const m = effMenu(load(),wi.b).filter(x=>x.avail), L = m.filter(x=>wi.items[x.id]>0).map(i=>({id:i.id,name:i.name,price:i.price,cost:i.cost,qty:wi.items[i.id]})); if(!L.length) return;
+    const nm = (wi.name||'').trim()||'Guest'; let id; mutate(S=>{ id = newOrder(S,{brand:wi.b, items:L, name:nm, source:'walkin', channel:wi.channel}).id; });
+    wi = {open:false, b:wi.b, items:{}, name:'', channel:wi.channel}; render(); toast('Order '+id+' added to the queue'); }
+  else if(act==='snd'){ sound = !sound; render(); if(sound) beep(); }
+  else if(act==='pickall'){ mutate(S=>{ S.orders.forEach(o=>{ if(o.status==='ready' && (kFilter<0||o.brand===kFilter)) o.status='picked'; }); }); }
+  else if(act==='rate'){ mutate(S=>{ const o=S.orders.find(x=>x.id===d.id); if(o) o.rating = +d.v; }); toast('Thanks for rating your order'); }
+  else if(act==='mm-reset'){ mutate(S=>{ DATA.menu[B[+d.b]].forEach(it=>delete S.menuOv[it.id]); }); toast('Menu reset to original prices'); }
+  else if(act==='tgt-reset'){ mutate(S=>{ S.targets = {}; }); toast('Targets reset'); }
+  else if(act==='rush') demoOrders(8);
+  else if(act==='complete') completeAll();
+  else if(act==='csv'){ const blob = new Blob([csv(load())],{type:'text/csv'}), a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = 'ghost_kitchen_app_orders.csv'; document.body.appendChild(a); a.click(); a.remove(); }
+  else if(act==='reset'){ if(confirm('Clear all demo orders on this device?')){ save({seq:0,orders:[]}); cart={0:{},1:{},2:{}}; render(); toast('Demo data cleared'); } }
+  else if(act==='tour') tour(0);
+  else if(act==='tournext') tour(Math.min(TOUR.length-1,tourI+1));
+  else if(act==='tourprev') tour(Math.max(0,tourI-1));
+  else if(act==='tourclose'){ $('#modal').classList.remove('on'); }
+  else if(act==='tourgo'){ $('#modal').classList.remove('on'); go(d.to); }
+});
+$('#modal').addEventListener('click', e=>{ if(e.target.id==='modal') e.target.classList.remove('on'); });
+document.addEventListener('keydown', e=>{ if(e.key==='Escape') $('#modal').classList.remove('on'); });
+document.querySelector('.logo i').innerHTML = logoHTML('gk');
+try{ const f=document.createElement('link'); f.rel='icon'; f.href='data:image/svg+xml,'+encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 48 48"><rect width="48" height="48" rx="11" fill="#b5651d"/>'+logoHTML('gk').replace(/^<svg[^>]*>/,'').replace('</svg>','')+'</svg>'); document.head.appendChild(f);}catch(e){}
+render();
+</script>
+</body>
+</html>
