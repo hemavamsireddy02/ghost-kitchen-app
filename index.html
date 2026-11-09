@@ -18,7 +18,7 @@ a{color:var(--navy2)}
 .top{position:sticky;top:0;z-index:20;background:var(--navy);color:#fff;border-bottom:3px solid var(--copper)}
 .top-in{max-width:1100px;margin:0 auto;padding:10px 16px;display:flex;align-items:center;gap:14px;flex-wrap:wrap}
 .logo{font-weight:800;font-size:1.1rem;letter-spacing:.02em;cursor:pointer;display:flex;align-items:center;gap:8px;margin-right:auto;background:none;border:0;color:#fff;padding:0}
-.logo i{width:36px;height:36px;border-radius:10px;background:var(--copper);display:inline-grid;place-items:center;font-style:normal;overflow:hidden}
+.logo i{width:38px;height:38px;border-radius:10px;background:var(--copper);display:inline-grid;place-items:center;font-style:normal;overflow:hidden;padding:4px}.logo i img{width:100%;height:100%;display:block}
 .logo i svg,.badge svg,.tile svg{width:100%;height:100%;display:block}
 .tile{display:inline-block;width:42px;height:42px;border-radius:11px;vertical-align:middle;margin-right:10px}
 .nav{display:flex;gap:4px;background:rgba(255,255,255,.1);padding:3px;border-radius:10px}
@@ -184,6 +184,18 @@ table.t tr.off td{color:var(--muted)}
 .cartbar{display:none;position:fixed;left:12px;right:12px;bottom:14px;z-index:30;background:var(--copper);color:#fff;border:0;border-radius:12px;padding:14px 18px;font-size:1rem;cursor:pointer;justify-content:space-between;box-shadow:0 8px 24px rgba(0,0,0,.25)}
 .bar em{background:rgba(255,255,255,.82);padding:0 5px;border-radius:3px;top:0;right:3px}
 @media (max-width:860px){.cartbar{display:flex}.wrap{padding-bottom:90px}}
+
+.sbar{height:10px;background:#e6e9f0;border-radius:6px;overflow:hidden}.sbar i{display:block;height:100%;border-radius:6px}.sbar i.ok{background:var(--navy2)}.sbar i.low{background:var(--copper)}.sbar i.out{background:#c0392b}
+.tblwrap{overflow-x:auto}.tbl{width:100%;border-collapse:collapse;font-size:.92rem}.tbl th{text-align:left;color:var(--muted);font-weight:600;padding:6px 8px;border-bottom:1px solid #e3e6ee}.tbl td{padding:8px;border-bottom:1px solid #eef0f5;vertical-align:middle}.tbl .num{text-align:right;white-space:nowrap}.tbl .acts{white-space:nowrap;text-align:right}.tbl .acts .btn{margin-left:6px}
+.chip.okc{background:#e3f3ea;color:#1c6b43}.chip.warn{background:#fdf0dd;color:#8a5200}
+.badge{background:#c0392b;color:#fff;border-radius:10px;padding:1px 8px;font-size:.72rem;vertical-align:middle;margin-left:6px}.nbadge{background:#c0392b;color:#fff;border-radius:9px;padding:0 6px;font-size:.72rem;margin-left:4px}
+.when{color:var(--muted);font-size:.78rem;margin-left:6px}.alert.rd{opacity:.6}
+.people{display:flex;flex-wrap:wrap;gap:6px}.pp{background:#eef1fa;border-radius:16px;padding:5px 6px 5px 12px;font-size:.85rem;display:inline-flex;gap:6px;align-items:center}.pp b{color:var(--navy)}.pp .x{background:#fff;border:1px solid #cfd5e6;border-radius:50%;width:22px;height:22px;line-height:18px;cursor:pointer;color:#a33;font-size:1rem;padding:0}.pp:not(:has(.x)){padding-right:12px}
+.shiftc.live{border:2px solid var(--copper)}.cov{margin:10px 0;font-size:.85rem;font-weight:600}.cov.ok{color:#1c6b43}.cov.bad{color:#a35a00}
+.addrow{display:flex;gap:8px;flex-wrap:wrap}.addrow select,.addrow input{flex:1;min-width:140px;padding:8px;border:1px solid #cfd5e6;border-radius:8px;font:inherit}
+.fb textarea{width:100%;padding:10px;border:1px solid #cfd5e6;border-radius:8px;font:inherit;resize:vertical}.fb-sent{background:#f4f6fb;padding:10px 12px;border-radius:8px}
+.fbrow{display:flex;gap:10px;padding:8px 0;border-bottom:1px solid #eef0f5}.fbrow .when{margin:2px 0 0}
+.logo i img{width:100%;height:100%;display:block}
 </style>
 </head>
 <body>
@@ -238,10 +250,29 @@ const logoHTML = (k, bg) => LOGO[k](bg || '#1e2761');
 
 /* ---------- shared store (browser storage = demo database) ---------- */
 let mem = null;
-function load(){ let s=null; try{ const x=localStorage.getItem(KEY); if(x) s=JSON.parse(x); }catch(e){} if(!s) s=mem; s=s||{seq:0,orders:[]}; s.orders=s.orders||[]; s.menuOv=s.menuOv||{}; s.targets=s.targets||{}; return s; }
+function load(){ let s=null; try{ const x=localStorage.getItem(KEY); if(x) s=JSON.parse(x); }catch(e){} if(!s) s=mem; s=s||{seq:0,orders:[]}; s.orders=s.orders||[]; s.menuOv=s.menuOv||{}; s.targets=s.targets||{}; s.stock=s.stock||{}; s.notes=s.notes||[]; s.staff=s.staff||DEF_STAFF.map(x=>({...x})); s.roster=s.roster||{}; return s; }
 function save(S){ mem = S; try{ localStorage.setItem(KEY, JSON.stringify(S)); }catch(e){} }
 function mutate(fn){ const S = load(); fn(S); save(S); render(); }
-let cart = {0:{},1:{},2:{}}, kFilter = -1, ownerTab = 'all', cname = '';
+let kTab = 'orders', cart = {0:{},1:{},2:{}}, kFilter = -1, ownerTab = 'all', cname = '';
+const SHIFTS = [{k:'Lunch',from:11,to:15,orders:732},{k:'Dinner',from:15,to:21,orders:992},{k:'Late Night',from:21,to:24,orders:406}];
+const DAYS = ['Mon','Tue','Wed','Thu','Fri','Sat','Sun'], ROLES = ['Cook','Prep','Packer','Shift lead'];
+const DEF_STAFF = [['s1','Alex R.','Cook'],['s2','Maria L.','Cook'],['s3','Jordan P.','Cook'],['s4','Sam T.','Prep'],['s5','Taylor B.','Prep'],['s6','Riley K.','Packer'],['s7','Casey W.','Packer'],
+  ['s8','Morgan D.','Shift lead'],['s9','Drew M.','Cook'],['s10','Quinn H.','Prep'],['s11','Avery S.','Shift lead'],['s12','Reese C.','Cook'],['s13','Skyler F.','Packer']].map(([id,name,role])=>({id,name,role}));
+const DEF_ROSTER = {'Lunch':['s8','s1','s2','s4','s6'],'Dinner':['s11','s3','s9','s5','s7'],'Late Night':['s12','s10','s13']};
+let stDay = (new Date().getDay()+6)%7, fbDraft = '', prevNotes = null;
+const hrt = h => h===24 ? 'midnight' : (h%12||12)+':00 '+(h<12?'am':'pm');
+const rosterOf = (S,day,k) => S.roster[day+'|'+k]!=null ? S.roster[day+'|'+k] : DEF_ROSTER[k].filter(id=>S.staff.some(x=>x.id===id));
+function onNow(S){ const d = new Date(), di = (d.getDay()+6)%7, h = d.getHours(), sh = SHIFTS.find(s=>h>=s.from&&h<s.to);
+  return {sh, di, people: sh ? rosterOf(S,DAYS[di],sh.k).map(id=>S.staff.find(x=>x.id===id)).filter(Boolean) : []}; }
+/* stock: portions on hand per menu item, par = full stock, low = reorder warning */
+const parOf = it => Math.max(24, Math.round(it.sold/42*3/2)*2), lowOf = it => Math.max(6, Math.round(parOf(it)*0.25));
+const stockNow = (S,it) => S.stock[it.id]!=null ? S.stock[it.id] : parOf(it);
+const brandOf = id => B.findIndex(b=>DATA.menu[b].some(x=>x.id===id));
+function addNote(S, type, it, by, left){ S.notes.push({id:'N'+Date.now().toString(36)+Math.random().toString(36).slice(2,5), ts:Date.now(), type, itemId:it.id, name:it.name, brand:brandOf(it.id), by, left, read:false}); if(S.notes.length>60) S.notes.splice(0,S.notes.length-60); }
+function setStock(S, it, n, by){ const prev = stockNow(S,it); n = Math.max(0, Math.round(n)); S.stock[it.id] = n;
+  if(prev>0 && n<=0) addNote(S,'out',it,by,0); else if(prev<=0 && n>0) addNote(S,'back',it,by,n); else if(prev>lowOf(it) && n<=lowOf(it) && n>0) addNote(S,'low',it,by,n); }
+function consumeStock(S, items){ items.forEach(i=>{ const it = findItem(i.id); if(!it) return; setStock(S, it, stockNow(S,it)-i.qty, 'System'); }); }
+const roleNow = () => (location.hash||'').startsWith('#/owner') ? 'Owner' : 'Kitchen';
 let wi = {open:false, b:0, items:{}, name:'', channel:'Phone'};
 let hf = {q:'', st:'', iss:'', ch:''};
 let sound = true, prevNew = null;
@@ -250,7 +281,7 @@ const chan = o => o.source==='demo' ? 'Demo' : o.source==='walkin' ? (o.channel|
 const tp = v => pct(v, Math.abs(v*100-Math.round(v*100))<1e-9 ? 0 : 1);
 const findItem = id => { for(const b of B){ const it = DATA.menu[b].find(x=>x.id===id); if(it) return it; } return null; };
 /* menu with owner overrides (price, availability) applied */
-function effMenu(S,b){ return DATA.menu[B[b]].map(it=>{ const ov=S.menuOv[it.id]||{}; return {...it, basePrice:it.price, price: ov.price!=null?ov.price:it.price, avail: ov.avail!==false}; }); }
+function effMenu(S,b){ return DATA.menu[B[b]].map(it=>{ const ov=S.menuOv[it.id]||{}, stock=stockNow(S,it); return {...it, basePrice:it.price, price: ov.price!=null?ov.price:it.price, enabled: ov.avail!==false, stock, par:parOf(it), low:lowOf(it), avail: ov.avail!==false && stock>0}; }); }
 function newOrder(S, o){ S.seq++; const pre = o.source==='walkin' ? 'WLK' : 'APP';
   const ord = orderCalc({id:pre+'-'+String(S.seq).padStart(4,'0'), name:'Guest', note:'', createdAt:Date.now(), status:'new', startedAt:null, readyAt:null, prepMin:null, error:null, rating:null, ...o}); S.orders.push(ord); return ord; }
 
@@ -270,11 +301,11 @@ function kpis(S, b){
     prepAvg: preps.length? preps.reduce((a,o)=>a+o.prepMin,0)/preps.length : null, errTypes:et, aov: os.length? rev/os.length : null};
 }
 function csv(S){
-  const head = ['order_id','order_date','order_time','order_hour','brand_name','order_channel','item_id','item_name','quantity','unit_price_usd','unit_food_cost_usd','platform_commission_pct','order_revenue_usd','order_profit_usd','prep_time_min','order_error','error_type','data_source','customer_rating'];
+  const head = ['order_id','order_date','order_time','order_hour','brand_name','order_channel','item_id','item_name','quantity','unit_price_usd','unit_food_cost_usd','platform_commission_pct','order_revenue_usd','order_profit_usd','prep_time_min','order_error','error_type','data_source','customer_rating','customer_feedback'];
   const rows = [head.join(',')];
   S.orders.forEach(o=>{ const d = new Date(o.createdAt);
     o.items.forEach(i=> rows.push([o.id, d.toISOString().slice(0,10), d.toTimeString().slice(0,5), d.getHours(), B[o.brand], (o.source==='walkin'?(o.channel||'Walk-in'):'Ghost Kitchen App'), i.id, '"'+i.name+'"', i.qty, i.price, i.cost, 0,
-      (i.price*i.qty).toFixed(2), ((i.price-i.cost)*i.qty).toFixed(2), o.prepMin==null?'':o.prepMin, o.error?'Yes':'No', o.error||'No Error', o.source, o.rating||''].join(','))); });
+      (i.price*i.qty).toFixed(2), ((i.price-i.cost)*i.qty).toFixed(2), o.prepMin==null?'':o.prepMin, o.error?'Yes':'No', o.error||'No Error', o.source, o.rating||'', '"'+String(o.feedback||'').replace(/"/g,'""')+'"'].join(','))); });
   return rows.join('\n');
 }
 
@@ -292,7 +323,7 @@ function demoOrders(n){
     const b = Math.floor(Math.random()*3), menu = effMenu(S,b).filter(x=>x.avail); if(!menu.length) continue; const cnt = 1+Math.floor(Math.random()*3), picked = {};
     for(let j=0;j<cnt;j++){ const it = pickWeighted(menu); picked[it.id] = {id:it.id,name:it.name,price:it.price,cost:it.cost,qty:(picked[it.id]?picked[it.id].qty:0)+1+(Math.random()<.25?1:0)}; }
     S.seq++; S.orders.push(orderCalc({id:'APP-'+String(S.seq).padStart(4,'0'), brand:b, items:Object.values(picked), name:names[Math.floor(Math.random()*names.length)],
-      note:'', createdAt:Date.now()-Math.floor(rnd(0,2500)), status:'new', startedAt:null, readyAt:null, prepMin:null, error:null, source:'demo'})); } });
+      note:'', createdAt:Date.now()-Math.floor(rnd(0,2500)), status:'new', startedAt:null, readyAt:null, prepMin:null, error:null, source:'demo'})); consumeStock(S, Object.values(picked)); } });
   toast(n+' demo orders added to the kitchen queue');
 }
 function completeAll(){
@@ -335,7 +366,7 @@ function vBrands(){
   ${(()=>{ const rc = load().orders.filter(o=>o.source==='app').slice(-5).reverse(); if(!rc.length) return '';
     return `<h2 style="margin-top:24px">Your recent orders</h2><div class="card feed">${rc.map(o=>`<div class="r"><span class="dot" style="--bc:${BC[o.brand]}"></span><span class="id">${o.id}</span><span>${B[o.brand]}</span><span class="rt">${money(o.revenue)} &middot; <b>${stLabel[o.status]}</b><button class="btn sm ghost" style="margin-left:10px" data-act="go" data-to="customer/order/${o.id}">Track</button></span></div>`).join('')}</div>`; })()}`;
 }
-function cartLines(b){ const m = effMenu(load(),b); return Object.entries(cart[b]).filter(([,q])=>q>0).map(([id,q])=>{ const it = m.find(x=>x.id===id); return it && it.avail ? {...it, qty:q} : null; }).filter(Boolean); }
+function cartLines(b){ const m = effMenu(load(),b); return Object.entries(cart[b]).filter(([,q])=>q>0).map(([id,q])=>{ const it = m.find(x=>x.id===id); return it && it.avail ? {...it, qty:Math.min(q,it.stock)} : null; }).filter(Boolean); }
 function cartBox(b, checkout){
   const L = cartLines(b), tot = L.reduce((a,i)=>a+i.price*i.qty,0);
   return `<div class="card cart" style="--bc:${BC[b]}"><h2>Your order <span class="chip">${B[b]}</span></h2>
@@ -349,7 +380,7 @@ function vMenu(b){
   <div class="menu-layout"><div>${cats.map(c=>{ const its = m.filter(x=>x.cat===c); if(!its.length) return '';
    return `<div class="cat"><h3>${c==='Main'?'Mains':c+'s'}</h3>${its.map(it=>{ const q = cart[b][it.id]||0;
     return `<div class="item ${it.avail?'':'off'}" style="--bc:${BC[b]}"><div class="n">${esc(it.name)}</div><div class="p">${money(it.price)}</div>
-     ${it.avail? `<div class="step">${q? `<button data-act="dec" data-b="${b}" data-id="${it.id}" aria-label="Remove one">&minus;</button><span>${q}</span>`:''}<button class="plus" data-act="inc" data-b="${b}" data-id="${it.id}" aria-label="Add one">+</button></div>` : '<span class="chip bad">Sold out</span>'}</div>`; }).join('')}</div>`; }).join('')}</div>
+     ${it.avail&&it.stock<=it.low?`<span class="chip warn">Only ${it.stock} left</span>`:''}${it.avail? `<div class="step">${q? `<button data-act="dec" data-b="${b}" data-id="${it.id}" aria-label="Remove one">&minus;</button><span>${q}</span>`:''}<button class="plus" data-act="inc" data-b="${b}" data-id="${it.id}" aria-label="Add one">+</button></div>` : '<span class="chip bad">Sold out</span>'}</div>`; }).join('')}</div>`; }).join('')}</div>
   ${cartBox(b,false)}</div>${(()=>{const L=cartLines(b);if(!L.length)return '';const q=L.reduce((x,i)=>x+i.qty,0),tt=L.reduce((x,i)=>x+i.price*i.qty,0);return `<button class="cartbar" data-act="go" data-to="customer/checkout/${b}"><span>${q} item${q>1?'s':''} in cart</span><b>Checkout &middot; ${money(tt)}</b></button>`;})()}`;
 }
 function vCheckout(b){
@@ -371,7 +402,9 @@ function vTrack(id){
    <p class="sub" style="margin-top:4px">Thanks${o.name&&o.name!=='Guest'?', '+esc(o.name):''}! This page updates as the kitchen works on your order.</p>
    <div class="track">${STAGES.map((s,i)=>`<div class="s ${i<idx?'done':i===idx?'cur':''}"><b>${i<idx||idx===3?'&check;':i+1}</b>${s[1]}</div>`).join('')}</div>
    <p style="text-align:center;margin:6px 0 16px;color:var(--muted)">${idx===3?'Picked up. Enjoy!': o.status==='ready'?'Your order is ready at the counter.': o.status==='preparing'?'The kitchen is cooking your order now.':'Typical prep time for '+B[o.brand]+': about '+Math.round(DATA.base[B[o.brand]].prepAvg)+' min (from 6 weeks of orders).'}</p>
-   ${isDone(o)? `<div class="rate">${o.rating? `<p>Thanks for the feedback! You rated this order <b>${o.rating} / 5</b>.</p>` : `<p><b>How was your order?</b> Tap a star to rate it.</p><div class="stars">${[5,4,3,2,1].map(n=>`<button data-act="rate" data-id="${o.id}" data-v="${n}" aria-label="${n} star${n>1?'s':''}">&#9733;</button>`).join('')}</div>`}</div>`:''}
+   ${isDone(o)? `<div class="rate">${o.rating? `<p>Thanks for rating! You gave this order <b>${o.rating} / 5</b>.</p>` : `<p><b>How was your order?</b> Tap a star to rate it.</p><div class="stars">${[5,4,3,2,1].map(n=>`<button data-act="rate" data-id="${o.id}" data-v="${n}" aria-label="${n} star${n>1?'s':''}">&#9733;</button>`).join('')}</div>`}
+     <div class="fb">${o.feedback? `<p class="fb-sent"><b>Your feedback</b><br>&ldquo;${esc(o.feedback)}&rdquo;</p><button class="btn sm ghost" data-act="fb-edit" data-id="${o.id}">Edit feedback</button>`
+       : `<label class="f" for="fbtext" style="margin-top:6px">Leave feedback (optional)</label><textarea id="fbtext" rows="3" maxlength="400" placeholder="Tell us what went well or what we could improve.">${esc(fbDraft)}</textarea><button class="btn sm alt" style="margin-top:8px" data-act="fb-send" data-id="${o.id}">Send feedback</button>`}</div></div>`:''}
    <h2>Order summary</h2>${o.items.map(i=>`<div class="cart"><div class="row" style="position:static"><span>${i.qty} &times; ${esc(i.name)}</span><span>${money(i.price*i.qty)}</span></div></div>`).join('')}
    <div class="cart"><div class="row total"><span>Total (pay at pickup)</span><span>${money(o.revenue)}</span></div></div>
    ${o.note?`<p class="sub">Note: ${esc(o.note)}</p>`:''}
@@ -398,9 +431,11 @@ function wiForm(S){
    <div style="display:flex;gap:8px;align-items:center;margin-top:12px;flex-wrap:wrap"><button class="btn alt" data-act="wi-place" ${L.length?'':'disabled'}>Add to queue &middot; ${money(tot)}</button><button class="btn ghost" data-act="wi-cancel">Cancel</button><span class="sub" style="margin:0">${cnt? cnt+' item'+(cnt>1?'s':''):'Pick at least one item'}</span></div></div>`;
 }
 function vKitchen(){
-  const S = load(), all = S.orders.filter(o=>o.status!=='picked'), os = all.filter(o=>kFilter<0||o.brand===kFilter), k = kpis(S);
+  const S = load(); const ktabs = `<div class="tabs"><button class="tab ${kTab==='orders'?'on':''}" data-act="ktab" data-t="orders">Orders</button><button class="tab ${kTab==='stock'?'on':''}" data-act="ktab" data-t="stock">Stock${S.notes.length||Object.keys(S.stock).length?'':''}</button></div>`;
+  if(kTab==='stock') return `<h1>Kitchen stock</h1><p class="sub">Check what is available and mark items out of stock. The owner is notified right away.</p>${ktabs}<div class="grid g2" style="margin-bottom:14px">${onShiftCard(S)}<div class="card"><h2>Owner notifications</h2><p class="sub" style="margin:0">${S.notes.filter(n=>!n.read).length} unread &middot; last alert ${S.notes.length?ago(S.notes[S.notes.length-1].ts):'none yet'}</p></div></div>${stockView(S,'Kitchen')}`;
+  const all = S.orders.filter(o=>o.status!=='picked'), os = all.filter(o=>kFilter<0||o.brand===kFilter), k = kpis(S);
   const col = (st,title)=>{ const l = os.filter(o=>o.status===st).sort((a,b)=>a.createdAt-b.createdAt); return `<div class="col"><h3><span>${title}</span><span>${l.length}</span></h3>${st==='ready'&&l.length?'<button class="btn sm ghost" style="margin:0 0 10px" data-act="pickall">Pick up all</button>':''}${l.map(orderCard).join('') || '<div class="empty" style="padding:6px 4px">Nothing here.</div>'}</div>`; };
-  return `<h1>Kitchen queue</h1><p class="sub">Orders from every brand arrive here the moment they are placed. Demo clock: 5 seconds = 1 minute.</p>
+  return `<h1>Kitchen queue</h1><p class="sub">Orders from every brand arrive here the moment they are placed. Demo clock: 5 seconds = 1 minute.</p>${ktabs}
   <div class="kstats"><div><b>${all.length}</b><span>open orders</span></div><div><b>${k.doneN}</b><span>completed this session</span></div>
    <div><b>${k.prepAvg==null?'–':k.prepAvg.toFixed(1)+' min'}</b><span>avg prep (this session)</span></div><div><b>${k.errN}</b><span>issues logged</span></div></div>
   <div class="kbar"><button class="fchip ${kFilter<0?'on':''}" data-act="kf" data-b="-1">All brands</button>${B.map((b,i)=>`<button class="fchip ${kFilter===i?'on':''}" data-act="kf" data-b="${i}"><span class="dot" style="--bc:${BC[i]}"></span>${b}</button>`).join('')}
@@ -409,6 +444,44 @@ function vKitchen(){
   <div class="cols">${col('new','New')}${col('preparing','Preparing')}${col('ready','Ready for pickup')}</div>
   ${S.orders.length===0?'<div class="notice">No orders yet. Place one from the <b>Customer</b> view, or use <b>Simulate lunch rush</b> to fill the queue.</div>':''}`;
 }
+/* stock + staffing + notifications */
+const ago = ts => { const m = Math.floor((Date.now()-ts)/60000); return m<1?'just now':m<60?m+' min ago':Math.floor(m/60)+' h ago'; };
+function stockLevel(it, s){ return s<=0 ? ['out','Out of stock'] : s<=lowOf(it) ? ['low','Low'] : ['ok','In stock']; }
+function stockView(S, who){
+  const total = B.reduce((n,bn)=>n+DATA.menu[bn].filter(it=>stockNow(S,it)<=lowOf(it)).length,0);
+  return `<div class="card"><h2>Available stock <span class="sub" style="font-weight:400;font-size:.85rem">(portions on hand)</span></h2>
+   <p class="sub" style="margin:0 0 10px">${total? `<b>${total}</b> item${total>1?'s are':' is'} low or out.`:'Everything is well stocked.'} Stock drops automatically with every order. ${who==='Kitchen'?'Marking an item out of stock hides it from customers and notifies the owner.':'Kitchen staff can mark items out of stock; you are notified here.'}</p>
+   <div class="kbar" style="margin-bottom:6px"><button class="btn sm ghost" data-act="st-restock-low">Restock all low items to full</button></div></div>
+  ${B.map((bn,b)=>{ const rows = DATA.menu[bn].map(it=>{ const s = stockNow(S,it), par = parOf(it), lv = stockLevel(it,s), w = Math.min(100, s/par*100);
+     return `<tr><td>${esc(it.name)}</td><td style="min-width:110px"><div class="sbar"><i class="${lv[0]}" style="width:${w}%"></i></div></td><td class="num"><b>${s}</b> / ${par}</td><td><span class="chip ${lv[0]==='ok'?'okc':lv[0]==='low'?'warn':'bad'}">${lv[1]}</span></td>
+      <td class="acts">${s>0?`<button class="btn sm ghost" data-act="st-out" data-id="${it.id}">Mark out of stock</button>`:''}<button class="btn sm ${s<=lowOf(it)?'alt':'ghost'}" data-act="st-fill" data-id="${it.id}">Restock to ${par}</button></td></tr>`; }).join('');
+    return `<div class="card" style="margin-top:14px"><h2><span class="dot" style="--bc:${BC[b]}"></span> ${bn}</h2><div class="tblwrap"><table class="tbl"><thead><tr><th>Item</th><th>Level</th><th class="num">On hand</th><th>Status</th><th></th></tr></thead><tbody>${rows}</tbody></table></div></div>`; }).join('')}`;
+}
+function notesCard(S){
+  const l = S.notes.slice().reverse().slice(0,8), unread = S.notes.filter(n=>!n.read).length;
+  const txt = n => n.type==='out' ? `<b>${esc(n.name)}</b> (${B[n.brand]}) is <b>out of stock</b>${n.by==='System'?' (ran out from orders)':' &mdash; marked by '+n.by}.` : n.type==='low' ? `<b>${esc(n.name)}</b> (${B[n.brand]}) is running low: <b>${n.left}</b> left.` : `<b>${esc(n.name)}</b> (${B[n.brand]}) is back in stock (${n.left} portions).`;
+  return `<div class="card notes"><h2>Kitchen notifications ${unread?`<span class="badge">${unread} new</span>`:''}</h2>${l.length? l.map(n=>`<div class="alert ${n.type==='back'?'ok':''} ${n.read?'rd':''}">${txt(n)} <span class="when">${ago(n.ts)}</span></div>`).join('') + (unread?`<button class="btn sm ghost" data-act="notes-read">Mark all as read</button>`:'') : '<div class="empty" style="padding:6px 4px">No stock alerts. You will see them here when the kitchen marks an item out or stock runs low.</div>'}</div>`;
+}
+function onShiftCard(S){
+  const n = onNow(S);
+  return `<div class="card"><h2>Working now</h2>${n.sh? `<p class="sub" style="margin:0 0 8px">${DAYS[n.di]} &middot; <b>${n.sh.k}</b> shift (${hrt(n.sh.from)} to ${hrt(n.sh.to)})</p><div class="people">${n.people.length? n.people.map(p=>`<span class="pp"><b>${esc(p.name)}</b> ${p.role}</span>`).join('') : '<span class="empty">Nobody is rostered.</span>'}</div>` : `<p class="sub" style="margin:0">Outside shift hours (kitchen opens ${hrt(11)}). Next shift: Lunch.</p>`}</div>`;
+}
+function vStaff(S, otabs){
+  const day = DAYS[stDay], n = onNow(S);
+  const shifts = SHIFTS.map(sh=>{ const ids = rosterOf(S,day,sh.k), ppl = ids.map(id=>S.staff.find(x=>x.id===id)).filter(Boolean), avail = S.staff.filter(x=>!ids.includes(x.id)), cooks = ppl.filter(p=>p.role==='Cook').length, need = sh.k==='Dinner'?3:2;
+    const live = n.sh && n.sh.k===sh.k && n.di===stDay;
+    return `<div class="card shiftc ${live?'live':''}"><h2>${sh.k} ${live?'<span class="chip okc">on now</span>':''}</h2><p class="sub" style="margin:0 0 8px">${hrt(sh.from)} to ${hrt(sh.to)} &middot; ${sh.orders} baseline orders</p>
+     <div class="people">${ppl.map(p=>`<span class="pp"><b>${esc(p.name)}</b> ${p.role}<button class="x" data-act="st-rm" data-day="${day}" data-shift="${sh.k}" data-id="${p.id}" aria-label="Remove ${esc(p.name)} from ${sh.k}">&times;</button></span>`).join('') || '<span class="empty">Nobody assigned.</span>'}</div>
+     <div class="cov ${cooks<need?'bad':'ok'}">${ppl.length} on shift &middot; ${cooks} cook${cooks===1?'':'s'} ${cooks<need?`(suggest at least ${need})`:'(covered)'}</div>
+     <div class="addrow"><select id="add_${sh.k.replace(' ','')}" aria-label="Add person to ${sh.k}"><option value="">Add a person&hellip;</option>${avail.map(x=>`<option value="${x.id}">${esc(x.name)} (${x.role})</option>`).join('')}</select><button class="btn sm" data-act="st-add" data-day="${day}" data-shift="${sh.k}">Add</button></div></div>`; }).join('');
+  return `<h1>Staffing</h1><p class="sub">See who is working each shift and add or remove people. Shift hours match the six-week order data.</p>${otabs}
+  <div class="tabs">${DAYS.map((d,i)=>`<button class="tab ${stDay===i?'on':''}" data-act="st-day" data-i="${i}">${d}${i===n.di?' (today)':''}</button>`).join('')}</div>
+  ${onShiftCard(S)}<div class="grid g3" style="margin-top:14px">${shifts}</div>
+  <div class="card" style="margin-top:14px"><h2>Team members</h2><div class="people">${S.staff.map(p=>`<span class="pp"><b>${esc(p.name)}</b> ${p.role}<button class="x" data-act="st-del" data-id="${p.id}" aria-label="Remove ${esc(p.name)} from the team">&times;</button></span>`).join('')}</div>
+   <div class="addrow" style="margin-top:12px"><input id="nsname" placeholder="New team member name" maxlength="30"><select id="nsrole">${ROLES.map(r=>`<option>${r}</option>`).join('')}</select><button class="btn sm alt" data-act="st-new">Add to team</button></div></div>`;
+}
+function fbCard(S,bi){ const l = S.orders.filter(o=>o.feedback && (bi==null||o.brand===bi)).slice(-5).reverse();
+  return `<div class="card" style="margin-top:14px"><h2>Customer feedback</h2>${l.length? l.map(o=>`<div class="fbrow"><span class="dot" style="--bc:${BC[o.brand]}"></span><div><b>${o.rating?'&#9733;'.repeat(o.rating)+'<span style="color:#cfd3dc">'+'&#9733;'.repeat(5-o.rating)+'</span> ':''}</b>&ldquo;${esc(o.feedback)}&rdquo;<div class="when">${o.id} &middot; ${B[o.brand]}${o.name?' &middot; '+esc(o.name):''}</div></div></div>`).join('') : '<div class="empty" style="padding:6px 4px">No written feedback yet. Customers can leave a comment after rating an order.</div>'}</div>`; }
 /* owner */
 function cmpRow(label, base, live, o){ // o: max, fmt, target, color
   const w = v => Math.max(1, Math.min(100, v/o.max*100));
@@ -456,8 +529,12 @@ function applyHistory(){
   c.textContent = 'Showing ' + n + ' of ' + rows.length + ' orders';
 }
 function vOwner(){
-  const S = load(), tab = ownerTab, key = tab==='all'?'Overall':B[+tab], bi = tab==='all'?null:+tab, base = DATA.base[key], L = kpis(S, bi);
-  const tabs = `<div class="tabs"><button class="tab ${tab==='all'?'on':''}" data-act="otab" data-t="all">Overall</button>${B.map((b,i)=>`<button class="tab ${tab==i?'on':''}" data-act="otab" data-t="${i}"><span class="dot" style="--bc:${BC[i]}"></span>${b}</button>`).join('')}</div>${tgtBox()}`;
+  const S = load(), tab = ownerTab;
+  const otabs = `<div class="tabs"><button class="tab ${tab==='all'?'on':''}" data-act="otab" data-t="all">Overall</button>${B.map((b,i)=>`<button class="tab ${tab==i?'on':''}" data-act="otab" data-t="${i}"><span class="dot" style="--bc:${BC[i]}"></span>${b}</button>`).join('')}<button class="tab ${tab==='stock'?'on':''}" data-act="otab" data-t="stock">Stock</button><button class="tab ${tab==='staff'?'on':''}" data-act="otab" data-t="staff">Staffing</button></div>`;
+  if(tab==='stock') return `<h1>Stock</h1><p class="sub">What is available in the kitchen right now, and alerts when the kitchen marks something out.</p>${otabs}${notesCard(S)}<div style="margin-top:14px">${stockView(S,'Owner')}</div>`;
+  if(tab==='staff') return vStaff(S, otabs);
+  const key = tab==='all'?'Overall':B[+tab], bi = tab==='all'?null:+tab, base = DATA.base[key], L = kpis(S, bi);
+  const tabs = otabs+`${tgtBox()}`;
   const mOK = L.margin!=null && L.margin>=TARGET.margin, eOK = L.errRate!=null && L.errRate<=TARGET.err;
   const cards = `<div class="grid g5">
    ${kpiCard('Revenue', L.n>=MIN_N? money0(L.rev) : money0(base.revenue), L.n>=MIN_N? `Live &middot; ${L.n} app orders`:'Baseline &middot; 6 weeks', [['Baseline (6 wks)', money0(base.revenue)],['Live (app)', L.n? money0(L.rev):'–'],['Avg order value', (L.aov!=null? money(L.aov):'–')+' vs '+money(base.revenue/base.orders)]])}
@@ -489,7 +566,7 @@ function vOwner(){
       ${m.slice().sort((a,b)=>b.sold-a.sold).map(it=>`<tr class="${it.avail?'':'off'}"><td>${esc(it.name)}${it.price!==it.basePrice?' <span class="chip demo">edited</span>':''}</td>
        <td class="r"><input type="number" class="pin" step="0.01" min="0.01" value="${it.price.toFixed(2)}" data-mm="price" data-id="${it.id}" aria-label="Price for ${esc(it.name)}"></td>
        <td class="r">${pct((it.price-it.cost)/it.price,0)}</td>
-       <td class="r"><label class="sw"><input type="checkbox" data-mm="avail" data-id="${it.id}" ${it.avail?'checked':''}><span>${it.avail?'On menu':'Sold out'}</span></label></td>
+       <td class="r"><label class="sw"><input type="checkbox" data-mm="avail" data-id="${it.id}" ${it.enabled?'checked':''}><span>${!it.enabled?'Sold out':it.stock<=0?'Out of stock':'On menu'}</span></label></td>
        <td class="r">${it.sold}</td><td class="r">${liveUnits[it.id]||0}</td></tr>`).join('')}</table></div>
       <div class="legend">Food margin = (price - food cost) / price, before platform commission.</div></div>`;
   }
@@ -515,7 +592,7 @@ function vOwner(){
     <pre class="code">${last? esc(JSON.stringify(last,null,2)) : '// No orders yet. Place an order to see its record here.'}</pre>
     <div style="margin-top:10px"><button class="btn sm" data-act="csv" ${S.orders.length?'':'disabled'}>Download orders as CSV</button> <span class="sub" style="margin:0 0 0 8px;font-size:.82rem">Same columns as the 6-week dataset, so app orders can be appended to it.</span></div></details></div>`;
   return `<h1>Owner dashboard</h1><p class="sub">Baseline = real orders from ${DATA.period}. Live = orders placed in this prototype (demo clock, no platform commission on direct app orders).</p>${tabs}${cards}${brandCharts}
-   <div class="grid g2" style="margin-top:14px">${alerts}${feed}</div>${tab==='all'?`<div style="margin-top:14px">${hours}</div>`:''}${historyCard(S,bi)}${flow}`;
+   ${S.notes.some(n=>!n.read)?`<div style="margin-top:14px">${notesCard(S)}</div>`:''}<div class="grid g2" style="margin-top:14px">${alerts}${feed}</div>${tab==='all'?`<div style="margin-top:14px">${hours}</div>`:''}${fbCard(S,bi)}${historyCard(S,bi)}${flow}`;
 }
 
 /* ---------- tour ---------- */
@@ -525,7 +602,7 @@ const TOUR = [
  {t:'2. Kitchen: work the queue',b:'<ul><li>The new order appears instantly in the queue.</li><li>Press <b>Start prep</b>, then <b>Mark ready</b>. The app records prep time.</li><li>If something goes wrong, log an issue (missing item, wrong item, and so on).</li><li>Use <b>+ Walk-in / phone order</b> to key in orders that do not come through the app.</li><li>Use <b>Simulate lunch rush</b> to fill the queue quickly.</li></ul>',go:['kitchen','Open kitchen view']},
  {t:'3. Owner: track the KPIs',b:'<ul><li>Switch between <b>Overall</b> and each brand.</li><li>Each KPI shows baseline, live and target side by side.</li><li>See alerts, staffing suggestions and the live order feed.</li><li>Open a brand tab to use the <b>Menu manager</b> (change prices or mark items sold out) and edit the KPI targets.</li><li>Search and filter every order in <b>Order history</b>.</li></ul>',go:['owner','Open owner dashboard']},
  {t:'4. How the data flows',b:'<p>Order placed &rarr; saved once in a shared store &rarr; kitchen adds prep time and issues &rarr; KPIs are recalculated for the owner. At the bottom of the owner page you can inspect the latest record and download all orders as a CSV with the same columns as the 6-week dataset.</p>'},
- {t:'Prototype notes',b:'<ul><li>Orders are stored in this browser, so all three views work on the same device (open them in different tabs to see live updates).</li><li>Demo clock: 5 seconds = 1 minute in the kitchen.</li><li>Simulated orders are labelled <b>DEMO</b>. Baseline numbers come from the real dataset.</li><li><b>Reset demo</b> clears everything.</li></ul>'}
+ {t:'Prototype notes',b:'<ul><li>Orders are stored in this browser, so all three views work on the same device (open them in different tabs to see live updates).</li><li>Demo clock: 5 seconds = 1 minute in the kitchen.</li><li>Kitchen &rarr; <b>Stock</b>: mark items out of stock; the owner gets a notification. Owner &rarr; <b>Stock</b> and <b>Staffing</b> tabs show availability and who is working each shift.</li><li>Simulated orders are labelled <b>DEMO</b>. Baseline numbers come from the real dataset.</li><li><b>Reset demo</b> clears everything.</li></ul>'}
 ];
 let tourI = 0;
 function tour(i){
@@ -545,21 +622,23 @@ function render(){
   document.querySelectorAll('#nav button').forEach(b=>b.classList.toggle('on', b.dataset.role===role));
   const b = +p[2];
   $('#aboutBtn').classList.toggle('on', p[0]==='about');
+  { const ob = document.querySelector('#nav button[data-role="owner"]'), un = S0.notes.filter(n=>!n.read).length; ob.innerHTML = 'Owner'+(un?` <span class="nbadge">${un}</span>`:''); }
   if(p[0]==='customer'){ if(p[1]==='menu'&&b>=0&&b<3) html = vMenu(b); else if(p[1]==='checkout'&&b>=0&&b<3) html = vCheckout(b); else if(p[1]==='order') html = vTrack(p[2]); else html = vBrands(); }
   else if(p[0]==='kitchen') html = vKitchen();
-  else if(p[0]==='owner'){ if(p[1]!==undefined && ['all','0','1','2'].includes(p[1])) ownerTab = p[1]; html = vOwner(); }
+  else if(p[0]==='owner'){ if(p[1]!==undefined && ['all','0','1','2','stock','staff'].includes(p[1])) ownerTab = p[1]; html = vOwner(); }
   else if(p[0]==='about') html = vAbout();
   else html = vHome();
-  const keep = ['cname','winame'].includes(document.activeElement && document.activeElement.id);
-  if(!keep){ a.innerHTML = html + `<div class="foot-note">Team 5 &middot; IS 5960 Master Research Project &middot; Saint Louis University &middot; Interactive prototype</div>`; }
-  applyHistory(); tick(); prevNew = S0.orders.filter(o=>o.status==='new').length;
+  const keep = ['cname','winame','fbtext','nsname'].includes(document.activeElement && document.activeElement.id);
+  if(!keep){ a.innerHTML = html + `<div class="foot-note">Team 5 &middot; IS 5960 Master Research Project &middot; Saint Louis University</div>`; }
+  applyHistory(); tick(); prevNew = S0.orders.filter(o=>o.status==='new').length; prevNotes = S0.notes.length;
 }
 function tick(){ document.querySelectorAll('[data-since]').forEach(el=>{ el.textContent = Math.max(0, Math.floor(simMin(Date.now()-(+el.dataset.since)))); }); }
 setInterval(tick, 1000);
 setInterval(()=>{ if((location.hash||'').startsWith('#/owner')) { const o=document.activeElement; if(!(o&&['SUMMARY','INPUT','SELECT','TEXTAREA'].includes(o.tagName))) render(); } }, 5000);
 window.addEventListener('hashchange', ()=>{ window.scrollTo(0,0); render(); });
 function beep(){ try{ const A = window.AudioContext||window.webkitAudioContext, c = new A(), o = c.createOscillator(), g = c.createGain(); o.type='sine'; o.frequency.value=880; g.gain.value=.08; o.connect(g); g.connect(c.destination); o.start(); setTimeout(()=>{ o.stop(); c.close(); },200); }catch(e){} }
-window.addEventListener('storage', e=>{ if(e.key!==KEY) return; const before = prevNew; render();
+window.addEventListener('storage', e=>{ if(e.key!==KEY) return; const before = prevNew, nb = prevNotes; render();
+  { const S2 = load(); if(nb!=null && S2.notes.length>nb){ const n = S2.notes[S2.notes.length-1]; if((location.hash||'').startsWith('#/owner')){ toast(n.type==='out'?n.name+' is out of stock':n.type==='low'?n.name+' is running low':n.name+' is back in stock'); if(sound) beep(); } } }
   if(sound && (location.hash||'').startsWith('#/kitchen') && before!=null && load().orders.filter(o=>o.status==='new').length>before){ beep(); toast('New order arrived'); } });
 document.addEventListener('change', e=>{ const t = e.target;
   if(t.id==='wibrand'){ wi.b = +t.value; wi.items = {}; render(); }
@@ -572,14 +651,15 @@ document.addEventListener('change', e=>{ const t = e.target;
   else if(t.id==='tmargin'||t.id==='terr'){ const v = parseFloat(t.value); if(!(v>0&&v<100)){ toast('Enter a percentage between 0 and 100'); render(); return; } mutate(S=>{ S.targets[t.id==='tmargin'?'margin':'err'] = v/100; }); toast('Target updated'); }
   else if(t.id==='hst'||t.id==='hiss'||t.id==='hch'){ hf[{hst:'st',hiss:'iss',hch:'ch'}[t.id]] = t.value; applyHistory(); }
 });
-document.addEventListener('input', e=>{ const t = e.target; if(t.id==='winame') wi.name = t.value; else if(t.id==='hq'){ hf.q = t.value; applyHistory(); } });
+document.addEventListener('input', e=>{ const t = e.target; if(t.id==='winame') wi.name = t.value; else if(t.id==='fbtext') fbDraft = t.value; else if(t.id==='hq'){ hf.q = t.value; applyHistory(); } });
 
 document.addEventListener('click', e=>{
   const t = e.target.closest('[data-act]'); if(!t) return; const d = t.dataset, act = d.act;
   if(act==='go') go(d.to);
-  else if(act==='inc'||act==='dec'){ const c = cart[+d.b]; c[d.id] = Math.max(0,(c[d.id]||0)+(act==='inc'?1:-1)); if(!c[d.id]) delete c[d.id]; render(); }
+  else if(act==='inc'||act==='dec'){ const c = cart[+d.b]; if(act==='inc'){ const it = effMenu(load(),+d.b).find(x=>x.id===d.id); if(!it||!it.avail){ toast('Sorry, that item is sold out'); render(); return; } if((c[d.id]||0)>=it.stock){ toast('Only '+it.stock+' left'); return; } }
+    c[d.id] = Math.max(0,(c[d.id]||0)+(act==='inc'?1:-1)); if(!c[d.id]) delete c[d.id]; render(); }
   else if(act==='place'){ const b = +d.b, L = cartLines(b); if(!L.length) return; const nm = ($('#cname')||{}).value, nt = ($('#cnote')||{}).value; cname = nm||''; let id;
-    mutate(S=>{ S.seq++; id = 'APP-'+String(S.seq).padStart(4,'0'); S.orders.push(orderCalc({id, brand:b, items:L.map(i=>({id:i.id,name:i.name,price:i.price,cost:i.cost,qty:i.qty})), name:(nm||'').trim()||'Guest', note:(nt||'').trim(), createdAt:Date.now(), status:'new', startedAt:null, readyAt:null, prepMin:null, error:null, source:'app'})); });
+    mutate(S=>{ S.seq++; id = 'APP-'+String(S.seq).padStart(4,'0'); S.orders.push(orderCalc({id, brand:b, items:L.map(i=>({id:i.id,name:i.name,price:i.price,cost:i.cost,qty:i.qty})), name:(nm||'').trim()||'Guest', note:(nt||'').trim(), createdAt:Date.now(), status:'new', startedAt:null, readyAt:null, prepMin:null, error:null, source:'app'})); consumeStock(S, L); });
     cart[b] = {}; go('customer/order/'+id); }
   else if(act==='start') mutate(S=>{ const o=S.orders.find(x=>x.id===d.id); if(o&&o.status==='new'){ o.status='preparing'; o.startedAt=Date.now(); } });
   else if(act==='ready') mutate(S=>{ const o=S.orders.find(x=>x.id===d.id); if(o&&o.status==='preparing'){ o.status='ready'; o.readyAt=Date.now(); o.prepMin=Math.max(1,Math.round(simMin(o.readyAt-o.startedAt))); } });
@@ -592,17 +672,29 @@ document.addEventListener('click', e=>{
   else if(act==='wi-cancel'){ wi = {open:false, b:0, items:{}, name:'', channel:'Phone'}; render(); }
   else if(act==='wi-inc'||act==='wi-dec'){ wi.items[d.id] = Math.max(0,(wi.items[d.id]||0)+(act==='wi-inc'?1:-1)); if(!wi.items[d.id]) delete wi.items[d.id]; render(); }
   else if(act==='wi-place'){ const m = effMenu(load(),wi.b).filter(x=>x.avail), L = m.filter(x=>wi.items[x.id]>0).map(i=>({id:i.id,name:i.name,price:i.price,cost:i.cost,qty:wi.items[i.id]})); if(!L.length) return;
-    const nm = (wi.name||'').trim()||'Guest'; let id; mutate(S=>{ id = newOrder(S,{brand:wi.b, items:L, name:nm, source:'walkin', channel:wi.channel}).id; });
+    const nm = (wi.name||'').trim()||'Guest'; let id; mutate(S=>{ id = newOrder(S,{brand:wi.b, items:L, name:nm, source:'walkin', channel:wi.channel}).id; consumeStock(S, L); });
     wi = {open:false, b:wi.b, items:{}, name:'', channel:wi.channel}; render(); toast('Order '+id+' added to the queue'); }
   else if(act==='snd'){ sound = !sound; render(); if(sound) beep(); }
   else if(act==='pickall'){ mutate(S=>{ S.orders.forEach(o=>{ if(o.status==='ready' && (kFilter<0||o.brand===kFilter)) o.status='picked'; }); }); }
   else if(act==='rate'){ mutate(S=>{ const o=S.orders.find(x=>x.id===d.id); if(o) o.rating = +d.v; }); toast('Thanks for rating your order'); }
   else if(act==='mm-reset'){ mutate(S=>{ DATA.menu[B[+d.b]].forEach(it=>delete S.menuOv[it.id]); }); toast('Menu reset to original prices'); }
   else if(act==='tgt-reset'){ mutate(S=>{ S.targets = {}; }); toast('Targets reset'); }
+  else if(act==='ktab'){ kTab = d.t; render(); }
+  else if(act==='st-out'){ mutate(S=>{ const it = findItem(d.id); if(it) setStock(S,it,0,roleNow()); }); const it = findItem(d.id); toast(it.name+' marked out of stock. Owner notified.'); }
+  else if(act==='st-fill'){ mutate(S=>{ const it = findItem(d.id); if(it) setStock(S,it,parOf(it),roleNow()); }); toast(findItem(d.id).name+' restocked'); }
+  else if(act==='st-restock-low'){ let n=0; mutate(S=>{ B.forEach((_,b)=>DATA.menu[B[b]].forEach(it=>{ if(stockNow(S,it)<=lowOf(it)){ setStock(S,it,parOf(it),roleNow()); n++; } })); }); toast(n? n+' item'+(n>1?'s':'')+' restocked':'Nothing is low'); }
+  else if(act==='notes-read') mutate(S=>{ S.notes.forEach(n=>n.read=true); });
+  else if(act==='st-day'){ stDay = +d.i; render(); }
+  else if(act==='st-add'){ const sel = $('#add_'+d.shift.replace(' ','')); if(!sel||!sel.value){ toast('Choose a person first'); return; } const id = sel.value; mutate(S=>{ const l = rosterOf(S,d.day,d.shift).slice(); if(!l.includes(id)) l.push(id); S.roster[d.day+'|'+d.shift] = l; }); toast('Added to '+d.shift+' on '+d.day); }
+  else if(act==='st-rm'){ mutate(S=>{ S.roster[d.day+'|'+d.shift] = rosterOf(S,d.day,d.shift).filter(x=>x!==d.id); }); toast('Removed from '+d.shift+' on '+d.day); }
+  else if(act==='st-new'){ const nm = ($('#nsname').value||'').trim(), rl = $('#nsrole').value; if(!nm){ toast('Enter a name first'); return; } mutate(S=>{ S.staff.push({id:'s'+Date.now().toString(36), name:nm, role:rl}); }); toast(nm+' added to the team'); }
+  else if(act==='st-del'){ mutate(S=>{ S.staff = S.staff.filter(x=>x.id!==d.id); Object.keys(S.roster).forEach(k=>S.roster[k]=S.roster[k].filter(x=>x!==d.id)); }); toast('Team member removed'); }
+  else if(act==='fb-send'){ const v = (($('#fbtext')||{}).value||'').trim(); if(!v){ toast('Write a short comment first'); return; } mutate(S=>{ const o=S.orders.find(x=>x.id===d.id); if(o) o.feedback = v.slice(0,400); }); fbDraft=''; toast('Thanks! Your feedback was sent to the owner'); }
+  else if(act==='fb-edit'){ const o = load().orders.find(x=>x.id===d.id); fbDraft = o?o.feedback||'':''; mutate(S=>{ const o=S.orders.find(x=>x.id===d.id); if(o) delete o.feedback; }); }
   else if(act==='rush') demoOrders(8);
   else if(act==='complete') completeAll();
   else if(act==='csv'){ const blob = new Blob([csv(load())],{type:'text/csv'}), a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = 'ghost_kitchen_app_orders.csv'; document.body.appendChild(a); a.click(); a.remove(); }
-  else if(act==='reset'){ if(confirm('Clear all demo orders on this device?')){ save({seq:0,orders:[]}); cart={0:{},1:{},2:{}}; render(); toast('Demo data cleared'); } }
+  else if(act==='reset'){ if(confirm('Clear all demo orders on this device?')){ save({seq:0,orders:[],stock:{},notes:[],roster:{}}); cart={0:{},1:{},2:{}}; render(); toast('Demo data cleared'); } }
   else if(act==='tour') tour(0);
   else if(act==='tournext') tour(Math.min(TOUR.length-1,tourI+1));
   else if(act==='tourprev') tour(Math.max(0,tourI-1));
@@ -611,8 +703,8 @@ document.addEventListener('click', e=>{
 });
 $('#modal').addEventListener('click', e=>{ if(e.target.id==='modal') e.target.classList.remove('on'); });
 document.addEventListener('keydown', e=>{ if(e.key==='Escape') $('#modal').classList.remove('on'); });
-document.querySelector('.logo i').innerHTML = logoHTML('gk');
-try{ const f=document.createElement('link'); f.rel='icon'; f.href='data:image/svg+xml,'+encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 48 48"><rect width="48" height="48" rx="11" fill="#b5651d"/>'+logoHTML('gk').replace(/^<svg[^>]*>/,'').replace('</svg>','')+'</svg>'); document.head.appendChild(f);}catch(e){}
+document.querySelector('.logo i').innerHTML = '<img src="data:image/png;base64,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" alt="">';
+try{ const f=document.createElement('link'); f.rel='icon'; f.type='image/png'; f.href='data:image/png;base64,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'; document.head.appendChild(f); }catch(e){}
 render();
 </script>
 </body>
