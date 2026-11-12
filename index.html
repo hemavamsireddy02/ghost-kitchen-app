@@ -435,7 +435,7 @@ function vKitchen(){
   if(kTab==='stock') return `<h1>Kitchen stock</h1><p class="sub">Check what is available and mark items out of stock. The owner is notified right away.</p>${ktabs}<div class="grid g2" style="margin-bottom:14px">${onShiftCard(S)}<div class="card"><h2>Owner notifications</h2><p class="sub" style="margin:0">${S.notes.filter(n=>!n.read).length} unread &middot; last alert ${S.notes.length?ago(S.notes[S.notes.length-1].ts):'none yet'}</p></div></div>${stockView(S,'Kitchen')}`;
   const all = S.orders.filter(o=>o.status!=='picked'), os = all.filter(o=>kFilter<0||o.brand===kFilter), k = kpis(S);
   const col = (st,title)=>{ const l = os.filter(o=>o.status===st).sort((a,b)=>a.createdAt-b.createdAt); return `<div class="col"><h3><span>${title}</span><span>${l.length}</span></h3>${st==='ready'&&l.length?'<button class="btn sm ghost" style="margin:0 0 10px" data-act="pickall">Pick up all</button>':''}${l.map(orderCard).join('') || '<div class="empty" style="padding:6px 4px">Nothing here.</div>'}</div>`; };
-  return `<h1>Kitchen queue</h1><p class="sub">Orders from every brand arrive here the moment they are placed. Demo clock: 5 seconds = 1 minute.</p>${ktabs}
+  return `<h1>Kitchen queue</h1><p class="sub">Orders from every brand arrive here the moment they are placed. Demo clock: 5 seconds = 1 minute. A chime plays for each new order while this page is open (click anywhere once to allow sound; keep Sound on).</p>${ktabs}
   <div class="kstats"><div><b>${all.length}</b><span>open orders</span></div><div><b>${k.doneN}</b><span>completed this session</span></div>
    <div><b>${k.prepAvg==null?'–':k.prepAvg.toFixed(1)+' min'}</b><span>avg prep (this session)</span></div><div><b>${k.errN}</b><span>issues logged</span></div></div>
   <div class="kbar"><button class="fchip ${kFilter<0?'on':''}" data-act="kf" data-b="-1">All brands</button>${B.map((b,i)=>`<button class="fchip ${kFilter===i?'on':''}" data-act="kf" data-b="${i}"><span class="dot" style="--bc:${BC[i]}"></span>${b}</button>`).join('')}
@@ -636,7 +636,10 @@ function tick(){ document.querySelectorAll('[data-since]').forEach(el=>{ el.text
 setInterval(tick, 1000);
 setInterval(()=>{ if((location.hash||'').startsWith('#/owner')) { const o=document.activeElement; if(!(o&&['SUMMARY','INPUT','SELECT','TEXTAREA'].includes(o.tagName))) render(); } }, 5000);
 window.addEventListener('hashchange', ()=>{ window.scrollTo(0,0); render(); });
-function beep(){ try{ const A = window.AudioContext||window.webkitAudioContext, c = new A(), o = c.createOscillator(), g = c.createGain(); o.type='sine'; o.frequency.value=880; g.gain.value=.08; o.connect(g); g.connect(c.destination); o.start(); setTimeout(()=>{ o.stop(); c.close(); },200); }catch(e){} }
+let actx=null;
+function audio(){ try{ const A=window.AudioContext||window.webkitAudioContext; if(!actx) actx=new A(); if(actx.state==='suspended') actx.resume(); }catch(e){} return actx; }
+['click','keydown','touchstart'].forEach(ev=>document.addEventListener(ev,()=>audio(),{passive:true}));
+function beep(){ const c=audio(); if(!c) return; try{ [[880,0],[1175,.18]].forEach(([f,d])=>{ const o=c.createOscillator(), g=c.createGain(), t0=c.currentTime+d; o.type='sine'; o.frequency.value=f; g.gain.setValueAtTime(0.0001,t0); g.gain.exponentialRampToValueAtTime(0.25,t0+.02); g.gain.exponentialRampToValueAtTime(0.0001,t0+.3); o.connect(g); g.connect(c.destination); o.start(t0); o.stop(t0+.32); }); }catch(e){} }
 window.addEventListener('storage', e=>{ if(e.key!==KEY) return; const before = prevNew, nb = prevNotes; render();
   { const S2 = load(); if(nb!=null && S2.notes.length>nb){ const n = S2.notes[S2.notes.length-1]; if((location.hash||'').startsWith('#/owner')){ toast(n.type==='out'?n.name+' is out of stock':n.type==='low'?n.name+' is running low':n.name+' is back in stock'); if(sound) beep(); } } }
   if(sound && (location.hash||'').startsWith('#/kitchen') && before!=null && load().orders.filter(o=>o.status==='new').length>before){ beep(); toast('New order arrived'); } });
