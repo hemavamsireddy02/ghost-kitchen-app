@@ -80,7 +80,7 @@ h2{font-size:1.15rem;margin:0 0 10px;color:var(--navy)}
 .empty{color:var(--muted);font-size:.92rem;padding:10px 0}
 label.f{display:block;font-size:.82rem;font-weight:700;color:var(--muted);margin:10px 0 4px;text-transform:uppercase;letter-spacing:.04em}
 input[type=text],textarea,select{width:100%;padding:9px 11px;border:1px solid var(--border);border-radius:8px;background:#fff}
-.pay{display:flex;gap:10px;align-items:center;border:2px solid var(--navy);border-radius:10px;padding:10px 12px;background:#f2f3f9;font-size:.92rem}
+.payopts{display:grid;grid-template-columns:1fr 1fr;gap:10px}.po{display:flex;flex-direction:column;gap:2px;border:2px solid var(--border);border-radius:10px;padding:10px 12px;background:#fff;cursor:pointer;position:relative;font-size:.92rem}.po.on{border-color:var(--navy);background:#f2f3f9}.po input{position:absolute;opacity:0}.po span{color:var(--muted);font-size:.82rem}.po:focus-within{outline:2px solid var(--copper)}.pay{display:flex;gap:10px;align-items:center;border:2px solid var(--navy);border-radius:10px;padding:10px 12px;background:#f2f3f9;font-size:.92rem}
 .track{display:flex;align-items:center;margin:18px 0 8px}
 .track .s{flex:1;text-align:center;position:relative;font-size:.85rem;font-weight:600;color:var(--muted)}
 .track .s b{display:grid;place-items:center;width:34px;height:34px;border-radius:50%;margin:0 auto 6px;background:#e6e8f0;color:var(--muted);position:relative;z-index:1}
@@ -290,7 +290,7 @@ let mem = null;
 function load(){ let s=null; try{ const x=localStorage.getItem(KEY); if(x) s=JSON.parse(x); }catch(e){} if(!s) s=mem; s=s||{seq:0,orders:[]}; s.orders=s.orders||[]; s.menuOv=s.menuOv||{}; s.targets=s.targets||{}; s.stock=s.stock||{}; s.notes=s.notes||[]; s.staff=s.staff||DEF_STAFF.map(x=>({...x})); s.roster=s.roster||{}; return s; }
 function save(S){ mem = S; try{ localStorage.setItem(KEY, JSON.stringify(S)); }catch(e){} }
 function mutate(fn){ const S = load(); fn(S); save(S); render(); }
-let kTab = 'orders', cart = {0:{},1:{},2:{}}, kFilter = -1, ownerTab = 'all', cname = '';
+let payM = 'card', kTab = 'orders', cart = {0:{},1:{},2:{}}, kFilter = -1, ownerTab = 'all', cname = '';
 const SHIFTS = [{k:'Lunch',from:11,to:15,orders:732},{k:'Dinner',from:15,to:21,orders:992},{k:'Late Night',from:21,to:24,orders:406}];
 const DAYS = ['Mon','Tue','Wed','Thu','Fri','Sat','Sun'], ROLES = ['Cook','Prep','Packer','Shift lead'];
 const DEF_STAFF = [['s1','Alex R.','Cook'],['s2','Maria L.','Cook'],['s3','Jordan P.','Cook'],['s4','Sam T.','Prep'],['s5','Taylor B.','Prep'],['s6','Riley K.','Packer'],['s7','Casey W.','Packer'],
@@ -338,11 +338,11 @@ function kpis(S, b){
     prepAvg: preps.length? preps.reduce((a,o)=>a+o.prepMin,0)/preps.length : null, errTypes:et, aov: os.length? rev/os.length : null};
 }
 function csv(S){
-  const head = ['order_id','order_date','order_time','order_hour','brand_name','order_channel','item_id','item_name','quantity','unit_price_usd','unit_food_cost_usd','platform_commission_pct','order_revenue_usd','order_profit_usd','prep_time_min','order_error','error_type','data_source','customer_rating','customer_feedback'];
+  const head = ['order_id','order_date','order_time','order_hour','brand_name','order_channel','item_id','item_name','quantity','unit_price_usd','unit_food_cost_usd','platform_commission_pct','order_revenue_usd','order_profit_usd','prep_time_min','order_error','error_type','data_source','customer_rating','customer_feedback','payment_method'];
   const rows = [head.join(',')];
   S.orders.forEach(o=>{ const d = new Date(o.createdAt);
     o.items.forEach(i=> rows.push([o.id, d.toISOString().slice(0,10), d.toTimeString().slice(0,5), d.getHours(), B[o.brand], (o.source==='walkin'?(o.channel||'Walk-in'):'Ghost Kitchen App'), i.id, '"'+i.name+'"', i.qty, i.price, i.cost, 0,
-      (i.price*i.qty).toFixed(2), ((i.price-i.cost)*i.qty).toFixed(2), o.prepMin==null?'':o.prepMin, o.error?'Yes':'No', o.error||'No Error', o.source, o.rating||'', '"'+String(o.feedback||'').replace(/"/g,'""')+'"'].join(','))); });
+      (i.price*i.qty).toFixed(2), ((i.price-i.cost)*i.qty).toFixed(2), o.prepMin==null?'':o.prepMin, o.error?'Yes':'No', o.error||'No Error', o.source, o.rating||'', '"'+String(o.feedback||'').replace(/"/g,'""')+'"', o.payment||''].join(','))); });
   return rows.join('\n');
 }
 
@@ -426,7 +426,7 @@ function vCheckout(b){
   return `<div class="crumb"><button data-act="go" data-to="customer/menu/${b}">&larr; Back to menu</button></div><h1>Checkout</h1><p class="sub">${B[b]} &middot; pickup order</p>
   <div class="menu-layout"><div class="card"><label class="f" for="cname">Name for the order</label><input type="text" id="cname" placeholder="Guest" value="${esc(cname)}" maxlength="30">
    <label class="f" for="cnote">Notes for the kitchen (optional)</label><textarea id="cnote" rows="3" placeholder="e.g. no onions"></textarea>
-   <label class="f">Payment</label><div class="pay"><b>Pay at pickup</b><span>Demo mode: no card or password needed.</span></div>
+   <label class="f">Payment method</label><div class="payopts" role="radiogroup" aria-label="Payment method"><label class="po ${payM==='card'?'on':''}"><input type="radio" name="paym" value="card" ${payM==='card'?'checked':''}><b>Pay by card</b><span>Pay now by card</span></label><label class="po ${payM==='cash'?'on':''}"><input type="radio" name="paym" value="cash" ${payM==='cash'?'checked':''}><b>Pay with cash</b><span>Pay at pickup</span></label></div>
    <button class="btn alt" style="margin-top:16px" data-act="place" data-b="${b}">Place order &middot; ${money(tot)}</button></div>${cartBox(b,true)}</div>`;
 }
 const STAGES = [['new','Received'],['preparing','Preparing'],['checking','Checking order'],['ready','Ready for pickup']];
@@ -444,7 +444,7 @@ function vTrack(id){
        : `<label class="f" for="fbtext" style="margin-top:6px">Leave feedback (optional)</label><textarea id="fbtext" rows="3" maxlength="400" placeholder="Tell us what went well or what we could improve.">${esc(fbDraft)}</textarea><button class="btn sm alt" style="margin-top:8px" data-act="fb-send" data-id="${o.id}">Send feedback</button>`}</div></div>`:''}
    <h2>Order summary</h2>${o.items.map(i=>`<div class="cart"><div class="row" style="position:static"><span>${i.qty} &times; ${esc(i.name)}</span><span>${money(i.price*i.qty)}</span></div></div>`).join('')}
    <div class="cart"><div class="row total"><span>Total (pay at pickup)</span><span>${money(o.revenue)}</span></div></div>
-   ${o.note?`<p class="sub">Note: ${esc(o.note)}</p>`:''}
+   ${o.payment?`<p class="sub">Payment: <b>${o.payment==='card'?'Paid by card':'Pay with cash at pickup'}</b></p>`:''}${o.note?`<p class="sub">Note: ${esc(o.note)}</p>`:''}
    <div style="margin-top:14px;display:flex;gap:8px;flex-wrap:wrap"><button class="btn ghost" data-act="go" data-to="kitchen">Open the kitchen view</button><button class="btn ghost" data-act="go" data-to="owner">Open the owner dashboard</button></div></div>`;
 }
 function orderCard(o){
@@ -453,7 +453,7 @@ function orderCard(o){
   const issue = o.status==='checking' ? `<div class="check"><b>Checking order</b><label class="f" for="chk_${o.id}">Does the order match the ticket?</label><select id="chk_${o.id}" data-issue="${o.id}" aria-label="Order check result"><option value="">All correct, no issue</option>${ERR.map(e=>`<option>${e}</option>`).join('')}</select><button class="btn sm alt" data-act="ready" data-id="${o.id}">Confirm &amp; mark ready</button></div>`
     : (o.error && o.status!=='new' ? `<div class="issue"><span class="chip bad">Issue: ${esc(o.error)}</span></div>` : '');
   return `<div class="oc" style="--bc:${BC[o.brand]}"><div class="oc-h"><b>${esc(o.id)}</b><span class="chip" style="background:${BC[o.brand]};color:#fff">${B[o.brand]}</span>${o.source==='demo'?'<span class="chip demo">DEMO</span>':''}${o.source==='walkin'?'<span class="chip">'+esc(o.channel||'Walk-in')+'</span>':''}</div>
-   <ul>${o.items.map(i=>`<li>${i.qty} &times; ${esc(i.name)}</li>`).join('')}</ul>${o.note?`<div class="meta">Note: ${esc(o.note)}</div>`:''}
+   <ul>${o.items.map(i=>`<li>${i.qty} &times; ${esc(i.name)}</li>`).join('')}</ul>${o.note?`<div class="meta">Note: ${esc(o.note)}</div>`:''}${o.payment?`<div class="meta">Payment: <b>${o.payment==='card'?'Paid by card':'Cash due at pickup'}</b></div>`:''}
    <div class="meta">${esc(o.name||'Guest')} &middot; ${timer}</div><div class="acts">${acts}</div>${issue}</div>`;
 }
 function wiForm(S){
@@ -691,7 +691,7 @@ document.addEventListener('change', e=>{ const t = e.target;
   else if(t.id==='tmargin'||t.id==='terr'){ const v = parseFloat(t.value); if(!(v>0&&v<100)){ toast('Enter a percentage between 0 and 100'); render(); return; } mutate(S=>{ S.targets[t.id==='tmargin'?'margin':'err'] = v/100; }); toast('Target updated'); }
   else if(t.id==='hst'||t.id==='hiss'||t.id==='hch'){ hf[{hst:'st',hiss:'iss',hch:'ch'}[t.id]] = t.value; applyHistory(); }
 });
-document.addEventListener('input', e=>{ const t = e.target; if(t.id==='winame') wi.name = t.value; else if(t.id==='fbtext') fbDraft = t.value; else if(t.id==='hq'){ hf.q = t.value; applyHistory(); } });
+document.addEventListener('input', e=>{ const t = e.target; if(t.name==='paym'){ payM = t.value; document.querySelectorAll('.po').forEach(l=>l.classList.toggle('on', l.querySelector('input').checked)); } if(t.id==='winame') wi.name = t.value; else if(t.id==='fbtext') fbDraft = t.value; else if(t.id==='hq'){ hf.q = t.value; applyHistory(); } });
 
 document.addEventListener('click', e=>{
   const t = e.target.closest('[data-act]'); if(!t) return; const d = t.dataset, act = d.act;
@@ -699,7 +699,7 @@ document.addEventListener('click', e=>{
   else if(act==='inc'||act==='dec'){ const c = cart[+d.b]; if(act==='inc'){ const it = effMenu(load(),+d.b).find(x=>x.id===d.id); if(!it||!it.avail){ toast('Sorry, that item is sold out'); render(); return; } if((c[d.id]||0)>=it.stock){ toast('Only '+it.stock+' left'); return; } }
     c[d.id] = Math.max(0,(c[d.id]||0)+(act==='inc'?1:-1)); if(!c[d.id]) delete c[d.id]; render(); }
   else if(act==='place'){ const b = +d.b, L = cartLines(b); if(!L.length) return; const nm = ($('#cname')||{}).value, nt = ($('#cnote')||{}).value; cname = nm||''; let id;
-    mutate(S=>{ S.seq++; id = 'APP-'+String(S.seq).padStart(4,'0'); S.orders.push(orderCalc({id, brand:b, items:L.map(i=>({id:i.id,name:i.name,price:i.price,cost:i.cost,qty:i.qty})), name:(nm||'').trim()||'Guest', note:(nt||'').trim(), createdAt:Date.now(), status:'new', startedAt:null, readyAt:null, prepMin:null, error:null, source:'app'})); consumeStock(S, L); });
+    mutate(S=>{ S.seq++; id = 'APP-'+String(S.seq).padStart(4,'0'); S.orders.push(orderCalc({id, brand:b, items:L.map(i=>({id:i.id,name:i.name,price:i.price,cost:i.cost,qty:i.qty})), name:(nm||'').trim()||'Guest', note:(nt||'').trim(), payment:payM, createdAt:Date.now(), status:'new', startedAt:null, readyAt:null, prepMin:null, error:null, source:'app'})); consumeStock(S, L); });
     cart[b] = {}; go('customer/order/'+id); }
   else if(act==='start') mutate(S=>{ const o=S.orders.find(x=>x.id===d.id); if(o&&o.status==='new'){ o.status='preparing'; o.startedAt=Date.now(); } });
   else if(act==='tocheck') mutate(S=>{ const o=S.orders.find(x=>x.id===d.id); if(o&&o.status==='preparing'){ o.status='checking'; o.readyAt=Date.now(); o.prepMin=Math.max(1,Math.round(simMin(o.readyAt-o.startedAt))); } });
